@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -56,6 +57,7 @@ class JclScanApplicationTests {
                     .name("STEP21")
                     .pgm(null)
                     .proc(ProcRef.builder().name("MYPROC").build())
+                    .symbolicParameters(null)
                     .build()))
                 .build()),
         Arguments.of(
@@ -70,6 +72,7 @@ class JclScanApplicationTests {
                     .name("STEP31")
                     .pgm(ProgRef.builder().name("MYCBL3").build())
                     .proc(null)
+                    .symbolicParameters(null)
                     .build()))
                 .build()));
   }
@@ -134,6 +137,39 @@ class JclScanApplicationTests {
   @ParameterizedTest
   @MethodSource("sameJclWithParamsInDifferentOrder")
   void shouldFindNamedParamsRegardlessOfOrder(String jclContent, JclFile expectedFile) {
+    // When
+    JclFile actualFile = jclParserService.parse(jclContent);
+
+    // Then
+    assertThat(actualFile).isEqualTo(expectedFile);
+  }
+
+  public static Stream<Arguments> simpleJclWithVariousCombinationsOfParams() {
+    return Stream.of(
+        Arguments.of(
+            """
+                //SIMPLE1 JOB (ACCT),MSGCLASS=H,NOTIFY=&SYSUID
+                //* Multiple positional parameters
+                //STEP11 EXEC PGM=MYPROG,PARAM1=VALUE1,PARAM2=VALUE2
+                //       PARAM3=VALUE3
+                """,
+            JclFile.builder()
+                .name("SIMPLE1")
+                .steps(List.of(JclStep.builder()
+                    .name("STEP11")
+                    .pgm(ProgRef.builder().name("MYPROG").build())
+                    .proc(null)
+                    .symbolicParameters(Map.of(
+                        "PARAM1", "VALUE1",
+                        "PARAM2", "VALUE2", 
+                        "PARAM3", "VALUE3"))
+                    .build()))
+                .build()));
+  }
+
+  @ParameterizedTest
+  @MethodSource("simpleJclWithVariousCombinationsOfParams")
+  void shouldStoreAllParams(String jclContent, JclFile expectedFile) {
     // When
     JclFile actualFile = jclParserService.parse(jclContent);
 
