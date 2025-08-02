@@ -3,6 +3,7 @@ package com.mechanicalorchard.imogen.jclscan;
 import com.mechanicalorchard.imogen.jclscan.model.JclFile;
 import com.mechanicalorchard.imogen.jclscan.model.JclStep;
 import com.mechanicalorchard.imogen.jclscan.model.ProcRef;
+import com.mechanicalorchard.imogen.jclscan.model.ProgRef;
 import com.mechanicalorchard.imogen.jclscan.service.JclParserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -38,7 +39,7 @@ class JclScanApplicationTests {
 					.name("SIMPLE1")
 					.steps(List.of(JclStep.builder()
 						.name("STEP11")
-						.pgm("MYCBL1")
+						.pgm(ProgRef.builder().name("MYCBL1").build())
 						.proc(null)
 						.build()))
 					.build()
@@ -47,6 +48,7 @@ class JclScanApplicationTests {
 				"""
 				//SIMPLE2 JOB (ACCT),MSGCLASS=H,NOTIFY=&SYSUID
 				//* Simple job that calls a custom procedure
+				//* During parsing, we place a reference; presumably we'll resolve it later.
 				//STEP21 EXEC PROC=MYPROC
 				""",
 				JclFile.builder()
@@ -68,7 +70,7 @@ class JclScanApplicationTests {
 					.name("PROC1")
 					.steps(List.of(JclStep.builder()
 						.name("STEP31")
-						.pgm("MYCBL3")
+						.pgm(ProgRef.builder().name("MYCBL3").build())
 						.proc(null)
 						.build()))
 					.build()
