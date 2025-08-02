@@ -2,6 +2,7 @@ package com.mechanicalorchard.imogen.jclscan.service;
 
 import com.mechanicalorchard.imogen.jclscan.model.JclFile;
 import com.mechanicalorchard.imogen.jclscan.model.JclStep;
+import com.mechanicalorchard.imogen.jclscan.model.ProcRef;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,12 +42,16 @@ public class JclParserService {
         while (matcher.find()) {
             String stepName = matcher.group(1);
             String pgm = matcher.group(3);  // PGM value
-            String proc = matcher.group(4); // PROC value
+            String procName = matcher.group(4); // PROC value
+            
+            // Create ProcRef if we have a procedure name, otherwise null
+            ProcRef procRef = procName != null ? 
+                ProcRef.builder().name(procName).build() : null;
             
             steps.add(JclStep.builder()
                 .name(stepName)
                 .pgm(pgm)
-                .proc(proc)
+                .proc(procRef)
                 .build());
         }
         
