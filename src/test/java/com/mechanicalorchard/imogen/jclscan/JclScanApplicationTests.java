@@ -20,72 +20,124 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 class JclScanApplicationTests {
 
-	@Autowired
-	private JclParserService jclParserService;
+  @Autowired
+  private JclParserService jclParserService;
 
-	@Test
-	void contextLoads() {
-	}
+  @Test
+  void contextLoads() {
+  }
 
-	private static Stream<Arguments> jclTestCases() {
-		return Stream.of(
-			Arguments.of(
-				"""
-				//SIMPLE1 JOB (ACCT),MSGCLASS=H,NOTIFY=&SYSUID
-				//* Simple job that calls a COBOL program
-				//STEP11 EXEC PGM=MYCBL1
-				""",
-				JclFile.builder()
-					.name("SIMPLE1")
-					.steps(List.of(JclStep.builder()
-						.name("STEP11")
-						.pgm(ProgRef.builder().name("MYCBL1").build())
-						.proc(null)
-						.build()))
-					.build()
-			),
-			Arguments.of(
-				"""
-				//SIMPLE2 JOB (ACCT),MSGCLASS=H,NOTIFY=&SYSUID
-				//* Simple job that calls a custom procedure
-				//* During parsing, we place a reference; presumably we'll resolve it later.
-				//STEP21 EXEC PROC=MYPROC
-				""",
-				JclFile.builder()
-					.name("SIMPLE2")
-					.steps(List.of(JclStep.builder()
-						.name("STEP21")
-						.pgm(null)
-						.proc(ProcRef.builder().name("MYPROC").build())
-						.build()))
-					.build()
-			),
-			Arguments.of(
-				"""
-				//PROC1  PROC
-				//* Custom procedure that calls a COBOL program
-				//STEP31 EXEC PGM=MYCBL3
-				""",
-				JclFile.builder()
-					.name("PROC1")
-					.steps(List.of(JclStep.builder()
-						.name("STEP31")
-						.pgm(ProgRef.builder().name("MYCBL3").build())
-						.proc(null)
-						.build()))
-					.build()
-			)
-		);
-	}
+  private static Stream<Arguments> jclTestCases() {
+    return Stream.of(
+        Arguments.of(
+            """
+                //SIMPLE1 JOB (ACCT),MSGCLASS=H,NOTIFY=&SYSUID
+                //* Simple job that calls a COBOL program
+                //STEP11 EXEC PGM=MYCBL1
+                """,
+            JclFile.builder()
+                .name("SIMPLE1")
+                .steps(List.of(JclStep.builder()
+                    .name("STEP11")
+                    .pgm(ProgRef.builder().name("MYCBL1").build())
+                    .proc(null)
+                    .build()))
+                .build()),
+        Arguments.of(
+            """
+                //SIMPLE2 JOB (ACCT),MSGCLASS=H,NOTIFY=&SYSUID
+                //* Simple job that calls a custom procedure
+                //* During parsing, we place a reference; presumably we'll resolve it later.
+                //STEP21 EXEC PROC=MYPROC
+                """,
+            JclFile.builder()
+                .name("SIMPLE2")
+                .steps(List.of(JclStep.builder()
+                    .name("STEP21")
+                    .pgm(null)
+                    .proc(ProcRef.builder().name("MYPROC").build())
+                    .build()))
+                .build()),
+        Arguments.of(
+            """
+                //PROC1  PROC
+                //* Custom procedure that calls a COBOL program
+                //STEP31 EXEC PGM=MYCBL3
+                """,
+            JclFile.builder()
+                .name("PROC1")
+                .steps(List.of(JclStep.builder()
+                    .name("STEP31")
+                    .pgm(ProgRef.builder().name("MYCBL3").build())
+                    .proc(null)
+                    .build()))
+                .build()));
+  }
 
-	@ParameterizedTest
-	@MethodSource("jclTestCases")
-	void shouldParseJcl(String jclContent, JclFile expectedFile) {
-		// When
-		JclFile actualFile = jclParserService.parse(jclContent);
+  @ParameterizedTest
+  @MethodSource("jclTestCases")
+  void shouldParseJcl(String jclContent, JclFile expectedFile) {
+    // When
+    JclFile actualFile = jclParserService.parse(jclContent);
 
-		// Then
-		assertThat(actualFile).isEqualTo(expectedFile);
-	}
+    // Then
+    assertThat(actualFile).isEqualTo(expectedFile);
+  }
 
+  public static Stream<Arguments> sameJclWithParamsInDifferentOrder() {
+    return Stream.of(
+        Arguments.of(
+            """
+                //SIMPLE1 JOB (ACCT),MSGCLASS=H,NOTIFY=&SYSUID
+                //* PGM in first position
+                //STEP11 EXEC PGM=MYCBL1,COND=(1,LT)
+                """,
+            JclFile.builder()
+                .name("SIMPLE1")
+                .steps(List.of(JclStep.builder()
+                    .name("STEP11")
+                    .pgm(ProgRef.builder().name("MYCBL1").build())
+                    .proc(null)
+                    .build()))
+                .build()),
+        Arguments.of(
+            """
+                //SIMPLE1 JOB (ACCT),MSGCLASS=H,NOTIFY=&SYSUID
+                //* PGM in second position
+                //STEP11 EXEC COND=(1,LT),PGM=MYCBL1
+                """,
+            JclFile.builder()
+                .name("SIMPLE1")
+                .steps(List.of(JclStep.builder()
+                    .name("STEP11")
+                    .pgm(ProgRef.builder().name("MYCBL1").build())
+                    .proc(null)
+                    .build()))
+                .build()),
+        Arguments.of(
+            """
+                //SIMPLE1 JOB (ACCT),MSGCLASS=H,NOTIFY=&SYSUID
+                //* PGM on a whole different line
+                //STEP11 EXEC COND=(1,LT),
+                //       PGM=MYCBL1
+                """,
+            JclFile.builder()
+                .name("SIMPLE1")
+                .steps(List.of(JclStep.builder()
+                    .name("STEP11")
+                    .pgm(ProgRef.builder().name("MYCBL1").build())
+                    .proc(null)
+                    .build()))
+                .build()));
+  }
+
+  @ParameterizedTest
+  @MethodSource("sameJclWithParamsInDifferentOrder")
+  void shouldFindNamedParamsRegardlessOfOrder(String jclContent, JclFile expectedFile) {
+    // When
+    JclFile actualFile = jclParserService.parse(jclContent);
+
+    // Then
+    assertThat(actualFile).isEqualTo(expectedFile);
+  }
 }

@@ -15,51 +15,132 @@ import org.springframework.stereotype.Service;
 @Service
 public class JclParserService {
 
-    private static final Pattern JOB_OR_PROC_PATTERN = Pattern.compile("^//([A-Z0-9]+)\\s+(JOB\\s+.*|PROC\\s*.*)", Pattern.MULTILINE);
-    private static final Pattern STEP_PATTERN = Pattern.compile("^//([A-Z0-9]+)\\s+EXEC\\s+(PGM=([A-Z0-9]+)|PROC=([A-Z0-9]+)).*", Pattern.MULTILINE);
+  private static final Pattern JOB_OR_PROC_PATTERN = Pattern.compile("^//([A-Z0-9]+)\\s+(JOB\\s+.*|PROC\\s*.*)",
+      Pattern.MULTILINE);
+  private static final Pattern STEP_PATTERN = Pattern.compile("^//([A-Z0-9]+)\\s+EXEC\\s+(.*)$", Pattern.MULTILINE);
+  private static final Pattern PGM_PARAM_PATTERN = Pattern.compile("\\bPGM=([A-Z0-9]+)\\b");
+  private static final Pattern PROC_PARAM_PATTERN = Pattern.compile("\\bPROC=([A-Z0-9]+)\\b");
 
-    public JclFile parse(String jclContent) {
-        String fileName = extractJobOrProcName(jclContent);
-        List<JclStep> steps = extractSteps(jclContent);
-        
-        return JclFile.builder()
-            .name(fileName)
-            .steps(steps)
-            .build();
+  public JclFile parse(String jclContent) {
+    // Preprocess to handle continuation lines
+    String normalizedContent = joinContinuationLines(jclContent);
+
+    String fileName = extractJobOrProcName(normalizedContent);
+    List<JclStep> steps = extractSteps(normalizedContent);
+
+    return JclFile.builder()
+        .name(fileName)
+        .steps(steps)
+        .build();
+  }
+
+  private String extractJobOrProcName(String jclContent) {
+    Matcher matcher = JOB_OR_PROC_PATTERN.matcher(jclContent);
+    if (matcher.find()) {
+      return matcher.group(1);
+    }
+    throw new IllegalArgumentException("No JOB or PROC statement found in JCL content");
+  }
+
+  private List<JclStep> extractSteps(String jclContent) {
+    List<JclStep> steps = new ArrayList<>();
+    Matcher matcher = STEP_PATTERN.matcher(jclContent);
+
+    while (matcher.find()) {
+      String stepName = matcher.group(1);
+      String parameterList = matcher.group(2); // All parameters after EXEC
+
+      // Extract PGM parameter if present
+      String pgmName = extractParameter(parameterList, PGM_PARAM_PATTERN);
+      ProgRef progRef = pgmName != null ? ProgRef.builder().name(pgmName).build() : null;
+
+      // Extract PROC parameter if present
+      String procName = extractParameter(parameterList, PROC_PARAM_PATTERN);
+      ProcRef procRef = procName != null ? ProcRef.builder().name(procName).build() : null;
+
+      steps.add(JclStep.builder()
+          .name(stepName)
+          .pgm(progRef)
+          .proc(procRef)
+          .build());
     }
 
-    private String extractJobOrProcName(String jclContent) {
-        Matcher matcher = JOB_OR_PROC_PATTERN.matcher(jclContent);
-        if (matcher.find()) {
-            return matcher.group(1);
+    return steps;
+  }
+
+  private String extractParameter(String parameterList, Pattern paramPattern) {
+    Matcher paramMatcher = paramPattern.matcher(parameterList);
+    return paramMatcher.find() ? paramMatcher.group(1) : null;
+  }
+
+  private String joinContinuationLines(String jclContent) {
+    String[] lines = jclContent.split("\n");
+    StringBuilder result = new StringBuilder();
+    StringBuilder currentStatement = new StringBuilder();
+
+    for (String line : lines) {
+      switch (classifyLine(line)) {
+        case EMPTY -> {
+          flushCurrentStatement(result, currentStatement);
+          result.append("\n");
         }
-        throw new IllegalArgumentException("No JOB or PROC statement found in JCL content");
+        case CONTINUATION -> {
+          String continuationContent = line.substring(2).trim();
+          if (!currentStatement.isEmpty()) {
+            stripTrailing(currentStatement, " ,");
+            currentStatement.append(",").append(continuationContent);
+          } else {
+            // Standalone continuation line (shouldn't happen, but handle gracefully)
+            currentStatement.append(continuationContent);
+          }
+        }
+        case JCL_STATEMENT -> {
+          flushCurrentStatement(result, currentStatement);
+          currentStatement.append(line);
+        }
+        case NON_JCL -> {
+          // Be tolerant; we're not parsing JCL, per se.
+          flushCurrentStatement(result, currentStatement);
+          result.append(line).append("\n");
+        }
+      }
     }
 
-    private List<JclStep> extractSteps(String jclContent) {
-        List<JclStep> steps = new ArrayList<>();
-        Matcher matcher = STEP_PATTERN.matcher(jclContent);
-        
-        while (matcher.find()) {
-            String stepName = matcher.group(1);
-            String pgmName = matcher.group(3);  // PGM value
-            String procName = matcher.group(4); // PROC value
-            
-            // Create ProgRef if we have a program name, otherwise null
-            ProgRef progRef = pgmName != null ? 
-                ProgRef.builder().name(pgmName).build() : null;
-            
-            // Create ProcRef if we have a procedure name, otherwise null
-            ProcRef procRef = procName != null ? 
-                ProcRef.builder().name(procName).build() : null;
-            
-            steps.add(JclStep.builder()
-                .name(stepName)
-                .pgm(progRef)
-                .proc(procRef)
-                .build());
-        }
-        
-        return steps;
+    // Don't forget the last statement
+    if (!currentStatement.isEmpty()) {
+      result.append(currentStatement.toString().trim()).append("\n");
     }
+
+    return result.toString();
+  }
+
+  private enum LineType {
+    EMPTY, CONTINUATION, JCL_STATEMENT, NON_JCL
+  }
+
+  private LineType classifyLine(String line) {
+    if (line.trim().isEmpty()) {
+      return LineType.EMPTY;
+    } else if (line.startsWith("//") && line.length() > 2 && line.charAt(2) == ' ') {
+      return LineType.CONTINUATION;
+    } else if (line.startsWith("//")) {
+      return LineType.JCL_STATEMENT;
+    } else {
+      return LineType.NON_JCL;
+    }
+  }
+
+  private void flushCurrentStatement(StringBuilder result, StringBuilder currentStatement) {
+    if (!currentStatement.isEmpty()) {
+      result.append(currentStatement.toString().trim()).append("\n");
+      currentStatement.setLength(0);
+    }
+  }
+
+  // Remove trailing characters if they are one of `trimChars`.
+  private void stripTrailing(StringBuilder sb, String trimChars) {
+    while (sb.length() > 0 && trimChars.indexOf(sb.charAt(sb.length() - 1)) != -1) {
+      sb.setLength(sb.length() - 1);
+    }
+  }
 }
