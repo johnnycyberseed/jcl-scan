@@ -6,7 +6,9 @@ import com.mechanicalorchard.imogen.jclscan.model.ProcRef;
 import com.mechanicalorchard.imogen.jclscan.model.ProgRef;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,6 +22,7 @@ public class JclParserService {
   private static final Pattern STEP_PATTERN = Pattern.compile("^//([A-Z0-9]+)\\s+EXEC\\s+(.*)$", Pattern.MULTILINE);
   private static final Pattern PGM_PARAM_PATTERN = Pattern.compile("\\bPGM=([A-Z0-9]+)\\b");
   private static final Pattern PROC_PARAM_PATTERN = Pattern.compile("\\bPROC=([A-Z0-9]+)\\b");
+  private static final Pattern PARAM_PATTERN = Pattern.compile("\\b([A-Z0-9]+)=([A-Z0-9]+)\\b");
 
   public JclFile parse(String jclContent) {
     // Preprocess to handle continuation lines
@@ -58,10 +61,14 @@ public class JclParserService {
       String procName = extractParameter(parameterList, PROC_PARAM_PATTERN);
       ProcRef procRef = procName != null ? ProcRef.builder().name(procName).build() : null;
 
+      // Extract symbolic parameters (everything except PGM and PROC)
+      Map<String, String> symbolicParams = extractSymbolicParameters(parameterList);
+
       steps.add(JclStep.builder()
           .name(stepName)
           .pgm(progRef)
           .proc(procRef)
+          .symbolicParameters(symbolicParams.isEmpty() ? null : symbolicParams)
           .build());
     }
 
@@ -71,6 +78,23 @@ public class JclParserService {
   private String extractParameter(String parameterList, Pattern paramPattern) {
     Matcher paramMatcher = paramPattern.matcher(parameterList);
     return paramMatcher.find() ? paramMatcher.group(1) : null;
+  }
+
+  private Map<String, String> extractSymbolicParameters(String parameterList) {
+    Map<String, String> symbolicParams = new HashMap<>();
+    Matcher matcher = PARAM_PATTERN.matcher(parameterList);
+    
+    while (matcher.find()) {
+      String paramName = matcher.group(1);
+      String paramValue = matcher.group(2);
+      
+      // Skip first-class parameters (PGM and PROC)
+      if (!"PGM".equals(paramName) && !"PROC".equals(paramName)) {
+        symbolicParams.put(paramName, paramValue);
+      }
+    }
+    
+    return symbolicParams;
   }
 
   private String joinContinuationLines(String jclContent) {

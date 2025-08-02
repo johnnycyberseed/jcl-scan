@@ -4,6 +4,8 @@ import lombok.Builder;
 import lombok.Data;
 import org.springframework.lang.Nullable;
 
+import java.util.Map;
+
 @Data
 @Builder
 public class JclStep {
@@ -12,6 +14,8 @@ public class JclStep {
     private Program pgm;
     @Nullable
     private JclProc proc;
+    @Nullable
+    private Map<String, String> symbolicParameters;
 
     // TODO:
     // - Lint: ensure there's exactly one executable:
