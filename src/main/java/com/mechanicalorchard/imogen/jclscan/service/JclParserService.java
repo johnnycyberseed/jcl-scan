@@ -53,13 +53,21 @@ public class JclParserService {
       String stepName = matcher.group(1);
       String parameterList = matcher.group(2); // All parameters after EXEC
 
+      // Check for first positional argument (procedure name without PROC= prefix)
+      String firstPositionalProc = extractFirstPositionalArgument(parameterList);
+      
       // Extract PGM parameter if present
       String pgmName = extractParameter(parameterList, PGM_PARAM_PATTERN);
       ProgRef progRef = pgmName != null ? ProgRef.builder().name(pgmName).build() : null;
 
-      // Extract PROC parameter if present
+      // Extract PROC parameter if present (named PROC= takes precedence over positional)
       String procName = extractParameter(parameterList, PROC_PARAM_PATTERN);
-      ProcRef procRef = procName != null ? ProcRef.builder().name(procName).build() : null;
+      ProcRef procRef = null;
+      if (procName != null) {
+        procRef = ProcRef.builder().name(procName).build();
+      } else if (firstPositionalProc != null) {
+        procRef = ProcRef.builder().name(firstPositionalProc).build();
+      }
 
       // Extract symbolic parameters (everything except PGM and PROC)
       Map<String, String> symbolicParams = extractSymbolicParameters(parameterList);
@@ -68,7 +76,7 @@ public class JclParserService {
           .name(stepName)
           .pgm(progRef)
           .proc(procRef)
-          .symbolicParameters(symbolicParams.isEmpty() ? null : symbolicParams)
+          .symbolicParameters(symbolicParams)
           .build());
     }
 
@@ -78,6 +86,19 @@ public class JclParserService {
   private String extractParameter(String parameterList, Pattern paramPattern) {
     Matcher paramMatcher = paramPattern.matcher(parameterList);
     return paramMatcher.find() ? paramMatcher.group(1) : null;
+  }
+
+  private String extractFirstPositionalArgument(String parameterList) {
+    // Split by comma and get the first parameter
+    String[] parameters = parameterList.trim().split(",");
+    if (parameters.length > 0) {
+      String firstParam = parameters[0].trim();
+      // If the first parameter doesn't contain '=', it's a positional argument
+      if (!firstParam.contains("=") && firstParam.matches("[A-Z0-9]+")) {
+        return firstParam;
+      }
+    }
+    return null;
   }
 
   private Map<String, String> extractSymbolicParameters(String parameterList) {

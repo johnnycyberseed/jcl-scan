@@ -57,7 +57,7 @@ class JclScanApplicationTests {
                     .name("STEP21")
                     .pgm(null)
                     .proc(ProcRef.builder().name("MYPROC").build())
-                    .symbolicParameters(null)
+
                     .build()))
                 .build()),
         Arguments.of(
@@ -72,7 +72,22 @@ class JclScanApplicationTests {
                     .name("STEP31")
                     .pgm(ProgRef.builder().name("MYCBL3").build())
                     .proc(null)
-                    .symbolicParameters(null)
+
+                    .build()))
+                .build()),
+        Arguments.of(
+            """
+                //PROC2  PROC
+                //* Custom procedure that calls a COBOL program
+                //STEP41 EXEC MYPROC
+                """,
+            JclFile.builder()
+                .name("PROC2")
+                .steps(List.of(JclStep.builder()
+                    .name("STEP41")
+                    .pgm(null)
+                    .proc(ProcRef.builder().name("MYPROC").build())
+
                     .build()))
                 .build()));
   }
@@ -150,7 +165,7 @@ class JclScanApplicationTests {
             """
                 //SIMPLE1 JOB (ACCT),MSGCLASS=H,NOTIFY=&SYSUID
                 //* Multiple positional parameters
-                //STEP11 EXEC PGM=MYPROG,PARAM1=VALUE1,PARAM2=VALUE2
+                //STEP11 EXEC PGM=MYPROG,PARAM1=VALUE1,PARAM2=VALUE2,
                 //       PARAM3=VALUE3
                 """,
             JclFile.builder()
