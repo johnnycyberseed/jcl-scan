@@ -1,11 +1,17 @@
 package com.mechanicalorchard.imogen.jclscan;
 
-import com.mechanicalorchard.imogen.jclscan.model.JclJob;
+import com.mechanicalorchard.imogen.jclscan.model.JclFile;
 import com.mechanicalorchard.imogen.jclscan.model.JclStep;
 import com.mechanicalorchard.imogen.jclscan.service.JclParserService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.List;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -19,24 +25,64 @@ class JclScanApplicationTests {
 	void contextLoads() {
 	}
 
-	@Test
-	void shouldParseSimpleJcl() {
-		// Given
-		String jclContent = """
-			//SIMPLE JOB (ACCT),MSGCLASS=H,NOTIFY=&SYSUID
-			//STEP1 EXEC PGM=IEFBR14
-			""";
+	private static Stream<Arguments> jclTestCases() {
+		return Stream.of(
+			Arguments.of(
+				"""
+				//SIMPLE1 JOB (ACCT),MSGCLASS=H,NOTIFY=&SYSUID
+				//* Simple job that calls a COBOL program
+				//STEP11 EXEC PGM=MYCBL1
+				""",
+				JclFile.builder()
+					.name("SIMPLE1")
+					.steps(List.of(JclStep.builder()
+						.name("STEP11")
+						.pgm("MYCBL1")
+						.proc(null)
+						.build()))
+					.build()
+			),
+			Arguments.of(
+				"""
+				//SIMPLE2 JOB (ACCT),MSGCLASS=H,NOTIFY=&SYSUID
+				//* Simple job that calls a custom procedure
+				//STEP21 EXEC PROC=MYPROC
+				""",
+				JclFile.builder()
+					.name("SIMPLE2")
+					.steps(List.of(JclStep.builder()
+						.name("STEP21")
+						.pgm(null)
+						.proc("MYPROC")
+						.build()))
+					.build()
+			),
+			Arguments.of(
+				"""
+				//PROC1  PROC
+				//* Custom procedure that calls a COBOL program
+				//STEP31 EXEC PGM=MYCBL3
+				""",
+				JclFile.builder()
+					.name("PROC1")
+					.steps(List.of(JclStep.builder()
+						.name("STEP31")
+						.pgm("MYCBL3")
+						.proc(null)
+						.build()))
+					.build()
+			)
+		);
+	}
 
+	@ParameterizedTest
+	@MethodSource("jclTestCases")
+	void shouldParseJcl(String jclContent, JclFile expectedFile) {
 		// When
-		JclJob jclJob = jclParserService.parse(jclContent);
+		JclFile actualFile = jclParserService.parse(jclContent);
 
 		// Then
-		assertThat(jclJob.getName()).isEqualTo("SIMPLE");
-		assertThat(jclJob.getSteps()).hasSize(1);
-
-		JclStep step = jclJob.getSteps().get(0);
-		assertThat(step.getName()).isEqualTo("STEP1");
-		assertThat(step.getPgm()).isEqualTo("IEFBR14");
-		assertThat(step.getProc()).isNull();
+		assertThat(actualFile).isEqualTo(expectedFile);
 	}
+
 }

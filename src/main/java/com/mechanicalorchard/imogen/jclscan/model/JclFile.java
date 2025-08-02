@@ -7,7 +7,7 @@ import java.util.List;
 
 @Data
 @Builder
-public class JclJob {
+public class JclFile {
     private String name;
     private List<JclStep> steps;
 }
