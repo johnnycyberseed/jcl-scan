@@ -179,7 +179,45 @@ class JclScanApplicationTests {
                         "PARAM2", "VALUE2", 
                         "PARAM3", "VALUE3"))
                     .build()))
-                .build()));
+                .build()),
+        Arguments.of(
+            """
+                //SIMPLE2 PROC
+                //* References to symbolic parameters should be copied literally.
+                //STEP21 EXEC PGM=MYPROG,PARAM1=&PARAM1,PARAM2=VALUE2,
+                //       MBR=&MBR
+                """,
+            JclFile.builder()
+                .name("SIMPLE2")
+                .steps(List.of(JclStep.builder()
+                    .name("STEP21")
+                    .pgm(ProgRef.builder().name("MYPROG").build())
+                    .proc(null)
+                    .symbolicParameters(Map.of(
+                        "PARAM1", "&PARAM1",
+                        "PARAM2", "VALUE2", 
+                        "MBR", "&MBR"))
+                    .build()))
+                .build()),
+        Arguments.of(
+            """
+                //SIMPLE2 PROC
+                //* Template placeholders should be copied literally
+                //STEP21 EXEC PGM=MYPROG,VALUE1=@VALUE1@,
+                //       VALUE2='@VALUE2@'
+                """,
+            JclFile.builder()
+                .name("SIMPLE2")
+                .steps(List.of(JclStep.builder()
+                    .name("STEP21")
+                    .pgm(ProgRef.builder().name("MYPROG").build())
+                    .proc(null)
+                    .symbolicParameters(Map.of(
+                        "VALUE1", "@VALUE1@",
+                        "VALUE2", "'@VALUE2@'"))
+                    .build()))
+                .build())
+                );
   }
 
   @ParameterizedTest

@@ -22,7 +22,7 @@ public class JclParserService {
   private static final Pattern STEP_PATTERN = Pattern.compile("^//([A-Z0-9]+)\\s+EXEC\\s+(.*)$", Pattern.MULTILINE);
   private static final Pattern PGM_PARAM_PATTERN = Pattern.compile("\\bPGM=([A-Z0-9]+)\\b");
   private static final Pattern PROC_PARAM_PATTERN = Pattern.compile("\\bPROC=([A-Z0-9]+)\\b");
-  private static final Pattern PARAM_PATTERN = Pattern.compile("\\b([A-Z0-9]+)=([A-Z0-9]+)\\b");
+  private static final Pattern PARAM_PATTERN = Pattern.compile("\\b([A-Z0-9]+)=((?:\\([^)]*\\)|[^,\\s])+)");
 
   public JclFile parse(String jclContent) {
     // Preprocess to handle continuation lines
@@ -109,8 +109,8 @@ public class JclParserService {
       String paramName = matcher.group(1);
       String paramValue = matcher.group(2);
       
-      // Skip first-class parameters (PGM and PROC)
-      if (!"PGM".equals(paramName) && !"PROC".equals(paramName)) {
+      // Skip first-class parameters (PGM, PROC, and COND)
+      if (!"PGM".equals(paramName) && !"PROC".equals(paramName) && !"COND".equals(paramName)) {
         symbolicParams.put(paramName, paramValue);
       }
     }
