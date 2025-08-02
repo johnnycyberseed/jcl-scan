@@ -2,6 +2,7 @@ package com.mechanicalorchard.imogen.jclscan;
 
 import com.mechanicalorchard.imogen.jclscan.model.JclFile;
 import com.mechanicalorchard.imogen.jclscan.model.JclStep;
+import com.mechanicalorchard.imogen.jclscan.model.ProcRef;
 import com.mechanicalorchard.imogen.jclscan.service.JclParserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -53,7 +54,7 @@ class JclScanApplicationTests {
 					.steps(List.of(JclStep.builder()
 						.name("STEP21")
 						.pgm(null)
-						.proc("MYPROC")
+						.proc(ProcRef.builder().name("MYPROC").build())
 						.build()))
 					.build()
 			),
