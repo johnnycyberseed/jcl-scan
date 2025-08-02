@@ -8,7 +8,8 @@ import org.springframework.lang.Nullable;
 @Builder
 public class JclStep {
     private String name;
-    private String pgm;
+    @Nullable
+    private Program pgm;
     @Nullable
     private JclProc proc;
 }
