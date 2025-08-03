@@ -1,4 +1,4 @@
-package com.mechanicalorchard.imogen.jclscan;
+package com.mechanicalorchard.jclscan;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.mechanicalorchard.imogen.jclscan.model.CobolFile;
-import com.mechanicalorchard.imogen.jclscan.service.CobolAnalyzerService;
+import com.mechanicalorchard.jclscan.model.CobolFile;
+import com.mechanicalorchard.jclscan.service.CobolAnalyzerService;
 
 @SpringBootTest
 class CobolAnalyzerServiceTests {

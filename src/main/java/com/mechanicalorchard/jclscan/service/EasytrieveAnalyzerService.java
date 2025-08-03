@@ -1,8 +1,8 @@
-package com.mechanicalorchard.imogen.jclscan.service;
+package com.mechanicalorchard.jclscan.service;
 
 import org.springframework.stereotype.Service;
 
-import com.mechanicalorchard.imogen.jclscan.model.EasytrieveFile;
+import com.mechanicalorchard.jclscan.model.EasytrieveFile;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

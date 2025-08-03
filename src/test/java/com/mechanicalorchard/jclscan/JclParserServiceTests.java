@@ -1,10 +1,10 @@
-package com.mechanicalorchard.imogen.jclscan;
+package com.mechanicalorchard.jclscan;
 
-import com.mechanicalorchard.imogen.jclscan.model.JclFile;
-import com.mechanicalorchard.imogen.jclscan.model.JclStep;
-import com.mechanicalorchard.imogen.jclscan.model.ProcRef;
-import com.mechanicalorchard.imogen.jclscan.model.ProgRef;
-import com.mechanicalorchard.imogen.jclscan.service.JclParserService;
+import com.mechanicalorchard.jclscan.model.JclFile;
+import com.mechanicalorchard.jclscan.model.JclStep;
+import com.mechanicalorchard.jclscan.model.ProcRef;
+import com.mechanicalorchard.jclscan.model.ProgRef;
+import com.mechanicalorchard.jclscan.service.JclParserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
