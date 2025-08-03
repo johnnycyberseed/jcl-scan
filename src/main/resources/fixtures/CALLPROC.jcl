@@ -1,3 +1,0 @@
-//MYJOB JOB (ACCOUNTING),'USER.NAME',MSGCLASS=X
-//STEP1 EXEC PROC=MYPROC
-//* Invoke a custom procedure
