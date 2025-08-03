@@ -1,4 +1,4 @@
-package com.mechanicalorchard.imogen.jclscan.model;
+package com.mechanicalorchard.jclscan.model;
 
 public sealed interface JclProc permits JclFile, ProcRef {
     String getName();

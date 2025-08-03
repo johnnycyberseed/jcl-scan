@@ -1,4 +1,4 @@
-package com.mechanicalorchard.imogen.jclscan.model;
+package com.mechanicalorchard.jclscan.model;
 
 import lombok.Builder;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package com.mechanicalorchard.imogen.jclscan;
+package com.mechanicalorchard.jclscan;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

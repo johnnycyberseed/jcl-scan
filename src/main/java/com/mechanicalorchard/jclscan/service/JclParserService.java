@@ -1,9 +1,9 @@
-package com.mechanicalorchard.imogen.jclscan.service;
+package com.mechanicalorchard.jclscan.service;
 
-import com.mechanicalorchard.imogen.jclscan.model.JclFile;
-import com.mechanicalorchard.imogen.jclscan.model.JclStep;
-import com.mechanicalorchard.imogen.jclscan.model.ProcRef;
-import com.mechanicalorchard.imogen.jclscan.model.ProgRef;
+import com.mechanicalorchard.jclscan.model.JclFile;
+import com.mechanicalorchard.jclscan.model.JclStep;
+import com.mechanicalorchard.jclscan.model.ProcRef;
+import com.mechanicalorchard.jclscan.model.ProgRef;
 
 import java.util.ArrayList;
 import java.util.HashMap;
