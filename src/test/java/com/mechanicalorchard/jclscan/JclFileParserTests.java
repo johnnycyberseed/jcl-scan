@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-class JclParserServiceTests {
+class JclFileParserTests {
 
   @Autowired
   private JclParserService jclParserService;
@@ -38,6 +38,7 @@ class JclParserServiceTests {
                 """,
             JclFile.builder()
                 .name("SIMPLE1")
+                .isJob(true)
                 .steps(List.of(JclStep.builder()
                     .name("STEP11")
                     .pgm(ProgRef.builder().name("MYCBL1").build())
@@ -53,6 +54,7 @@ class JclParserServiceTests {
                 """,
             JclFile.builder()
                 .name("SIMPLE2")
+                .isJob(true)
                 .steps(List.of(JclStep.builder()
                     .name("STEP21")
                     .pgm(null)
@@ -96,7 +98,7 @@ class JclParserServiceTests {
   @MethodSource("jclTestCases")
   void shouldParseJcl(String jclContent, JclFile expectedFile) {
     // When
-    JclFile actualFile = jclParserService.parse(jclContent);
+    JclFile actualFile = jclParserService.parseJclFile(jclContent);
 
     // Then
     assertThat(actualFile).isEqualTo(expectedFile);
@@ -112,6 +114,7 @@ class JclParserServiceTests {
                 """,
             JclFile.builder()
                 .name("SIMPLE1")
+                .isJob(true)
                 .steps(List.of(JclStep.builder()
                     .name("STEP11")
                     .pgm(ProgRef.builder().name("MYCBL1").build())
@@ -126,6 +129,7 @@ class JclParserServiceTests {
                 """,
             JclFile.builder()
                 .name("SIMPLE1")
+                .isJob(true)
                 .steps(List.of(JclStep.builder()
                     .name("STEP11")
                     .pgm(ProgRef.builder().name("MYCBL1").build())
@@ -141,6 +145,7 @@ class JclParserServiceTests {
                 """,
             JclFile.builder()
                 .name("SIMPLE1")
+                .isJob(true)
                 .steps(List.of(JclStep.builder()
                     .name("STEP11")
                     .pgm(ProgRef.builder().name("MYCBL1").build())
@@ -153,7 +158,7 @@ class JclParserServiceTests {
   @MethodSource("sameJclWithParamsInDifferentOrder")
   void shouldFindNamedParamsRegardlessOfOrder(String jclContent, JclFile expectedFile) {
     // When
-    JclFile actualFile = jclParserService.parse(jclContent);
+    JclFile actualFile = jclParserService.parseJclFile(jclContent);
 
     // Then
     assertThat(actualFile).isEqualTo(expectedFile);
@@ -170,6 +175,7 @@ class JclParserServiceTests {
                 """,
             JclFile.builder()
                 .name("SIMPLE1")
+                .isJob(true)
                 .steps(List.of(JclStep.builder()
                     .name("STEP11")
                     .pgm(ProgRef.builder().name("MYPROG").build())
@@ -224,9 +230,26 @@ class JclParserServiceTests {
   @MethodSource("simpleJclWithVariousCombinationsOfParams")
   void shouldStoreAllParams(String jclContent, JclFile expectedFile) {
     // When
-    JclFile actualFile = jclParserService.parse(jclContent);
+    JclFile actualFile = jclParserService.parseJclFile(jclContent);
 
     // Then
     assertThat(actualFile).isEqualTo(expectedFile);
+  }
+
+  @Test
+  void shouldReportIsJobWhenIsJob() {
+    JclFile actualFile = jclParserService.parseJclFile("""
+      //IMAJOB  JOB
+      //STEP01  EXEC DUMMY
+        """);
+
+    assertThat(actualFile.isJob()).isTrue();
+
+    actualFile = jclParserService.parseJclFile("""
+      //IMAJOB  PROC
+      //STEP01  EXEC DUMMY
+        """);
+
+    assertThat(actualFile.isJob()).isFalse();
   }
 }

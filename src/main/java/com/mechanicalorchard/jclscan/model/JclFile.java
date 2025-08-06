@@ -10,4 +10,5 @@ import java.util.List;
 public final class JclFile implements JclProc {
     private String name;
     private List<JclStep> steps;
+    private boolean isJob;
 }
