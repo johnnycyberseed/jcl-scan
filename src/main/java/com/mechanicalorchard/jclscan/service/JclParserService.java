@@ -30,34 +30,6 @@ public class JclParserService {
   private static final Pattern PROC_PARAM_PATTERN = Pattern.compile("\\bPROC=([A-Z0-9]+)\\b");
   private static final Pattern PARAM_PATTERN = Pattern.compile("\\b([A-Z0-9]+)=((?:\\([^)]*\\)|[^,\\s])+)");
 
-  public JclApp parseJclApp(List<AppSourceFile> appSourceFiles) {
-    JclApp app = new JclApp();
-    
-    for (AppSourceFile appSourceFile : appSourceFiles) {
-      try {
-        String source = appSourceFile.getContent().getContentAsString(Charset.defaultCharset());
-        switch(appSourceFile.getKind()) {
-          case AppSourceFile.Kind.JCL:
-            JclFile jclFile = parseJclFile(source);
-            if (jclFile.isJob()) {
-              app.getJobs().add(jclFile);
-            } else {
-              app.getProcLib().register(appSourceFile.getName(), jclFile);
-            }
-            break;
-          case AppSourceFile.Kind.COBOL:
-          case AppSourceFile.Kind.ASSEMBLY:
-          case AppSourceFile.Kind.EASYTRIEVE:
-            break;
-        }
-      } catch (IOException excp) {
-        throw new RuntimeException("Unexpected exception while reading " + appSourceFile.toString(), excp);
-      }
-    }
-
-    return app;
-  }
-
   public JclFile parseJclFile(String jclContent) {
     // Preprocess to handle continuation lines
     String normalizedContent = joinContinuationLines(jclContent);
