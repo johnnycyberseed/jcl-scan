@@ -12,6 +12,7 @@ import org.springframework.core.io.PathResource;
 import com.mechanicalorchard.jclscan.model.AppSourceFile;
 import com.mechanicalorchard.jclscan.model.AppSourceFile.Kind;
 import com.mechanicalorchard.jclscan.model.JclApp;
+import com.mechanicalorchard.jclscan.service.JclAppParserService;
 import com.mechanicalorchard.jclscan.service.JclParserService;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 public class JclAppParserTests {
   @Autowired
-  JclParserService jclParserService;
+  JclAppParserService jclAppParserService;
 
   @Test
   void shouldParseJclApp() {
@@ -41,7 +42,7 @@ public class JclAppParserTests {
             """)
     );
 
-    JclApp app = jclParserService.parseJclApp(appSourceFiles);
+    JclApp app = jclAppParserService.parse(appSourceFiles);
     assertThat(app.getJobs()).size().isEqualTo(1);
     assertThat(app.getProcLib().size()).isEqualTo(1);
     // assertThat(app.getLinkLib().size()).isEqualTo(1);
