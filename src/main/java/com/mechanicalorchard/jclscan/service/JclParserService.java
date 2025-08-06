@@ -1,10 +1,14 @@
 package com.mechanicalorchard.jclscan.service;
 
+import com.mechanicalorchard.jclscan.model.AppSourceFile;
+import com.mechanicalorchard.jclscan.model.JclApp;
 import com.mechanicalorchard.jclscan.model.JclFile;
 import com.mechanicalorchard.jclscan.model.JclStep;
 import com.mechanicalorchard.jclscan.model.ProcRef;
 import com.mechanicalorchard.jclscan.model.ProgRef;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,32 +21,75 @@ import org.springframework.stereotype.Service;
 @Service
 public class JclParserService {
 
-  private static final Pattern JOB_OR_PROC_PATTERN = Pattern.compile("^//([A-Z0-9]+)\\s+(JOB\\s+.*|PROC\\s*.*)",
+  private static final Pattern JOB_PATTERN = Pattern.compile("^//([A-Z0-9]+)\\s+JOB\\s+.*",
+      Pattern.MULTILINE);
+  private static final Pattern PROC_PATTERN = Pattern.compile("^//([A-Z0-9]+)\\s+PROC\\s*.*",
       Pattern.MULTILINE);
   private static final Pattern STEP_PATTERN = Pattern.compile("^//([A-Z0-9]+)\\s+EXEC\\s+(.*)$", Pattern.MULTILINE);
   private static final Pattern PGM_PARAM_PATTERN = Pattern.compile("\\bPGM=([A-Z0-9]+)\\b");
   private static final Pattern PROC_PARAM_PATTERN = Pattern.compile("\\bPROC=([A-Z0-9]+)\\b");
   private static final Pattern PARAM_PATTERN = Pattern.compile("\\b([A-Z0-9]+)=((?:\\([^)]*\\)|[^,\\s])+)");
 
-  public JclFile parse(String jclContent) {
+  public JclApp parseJclApp(List<AppSourceFile> appSourceFiles) {
+    JclApp app = new JclApp();
+    
+    for (AppSourceFile appSourceFile : appSourceFiles) {
+      try {
+        String source = appSourceFile.getContent().getContentAsString(Charset.defaultCharset());
+        switch(appSourceFile.getKind()) {
+          case AppSourceFile.Kind.JCL:
+            JclFile jclFile = parseJclFile(source);
+            app.getJobs().add(jclFile);
+            app.getProcLib().register(appSourceFile.getName(), jclFile);
+            break;
+          case AppSourceFile.Kind.COBOL:
+          case AppSourceFile.Kind.ASSEMBLY:
+          case AppSourceFile.Kind.EASYTRIEVE:
+            break;
+        }
+      } catch (IOException excp) {
+        throw new RuntimeException("Unexpected exception while reading " + appSourceFile.toString(), excp);
+      }
+    }
+
+    return app;
+  }
+
+  public JclFile parseJclFile(String jclContent) {
     // Preprocess to handle continuation lines
     String normalizedContent = joinContinuationLines(jclContent);
 
+    boolean isJob = isJobOrProc(normalizedContent);
     String fileName = extractJobOrProcName(normalizedContent);
     List<JclStep> steps = extractSteps(normalizedContent);
 
     return JclFile.builder()
         .name(fileName)
+        .isJob(isJob)
         .steps(steps)
         .build();
   }
 
+  private boolean isJobOrProc(String jclContent) {
+    Matcher matcher = JOB_PATTERN.matcher(jclContent);
+    return matcher.find();
+  }
+
   private String extractJobOrProcName(String jclContent) {
-    Matcher matcher = JOB_OR_PROC_PATTERN.matcher(jclContent);
+    Matcher matcher = JOB_PATTERN.matcher(jclContent);
+    String name = null;
     if (matcher.find()) {
-      return matcher.group(1);
+      name = matcher.group(1);
     }
-    throw new IllegalArgumentException("No JOB or PROC statement found in JCL content");
+
+    matcher = PROC_PATTERN.matcher(jclContent);
+    if (matcher.find()) {
+      name = matcher.group(1);
+    }
+    if (name == null) {
+      throw new IllegalArgumentException("No JOB or PROC statement found in JCL content");
+    }
+    return name;
   }
 
   private List<JclStep> extractSteps(String jclContent) {
