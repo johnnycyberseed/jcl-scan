@@ -39,8 +39,11 @@ public class JclParserService {
         switch(appSourceFile.getKind()) {
           case AppSourceFile.Kind.JCL:
             JclFile jclFile = parseJclFile(source);
-            app.getJobs().add(jclFile);
-            app.getProcLib().register(appSourceFile.getName(), jclFile);
+            if (jclFile.isJob()) {
+              app.getJobs().add(jclFile);
+            } else {
+              app.getProcLib().register(appSourceFile.getName(), jclFile);
+            }
             break;
           case AppSourceFile.Kind.COBOL:
           case AppSourceFile.Kind.ASSEMBLY:
