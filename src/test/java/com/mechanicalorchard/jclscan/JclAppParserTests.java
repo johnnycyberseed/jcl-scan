@@ -1,13 +1,19 @@
 package com.mechanicalorchard.jclscan;
 
 import java.util.List;
+import java.util.Objects;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import com.mechanicalorchard.jclscan.model.AppSourceFile;
 import com.mechanicalorchard.jclscan.model.AppSourceFile.Kind;
+import com.mechanicalorchard.jclscan.model.CobolFile;
+import com.mechanicalorchard.jclscan.model.EasytrieveFile;
 import com.mechanicalorchard.jclscan.model.JclApp;
+import com.mechanicalorchard.jclscan.model.JclFile;
+import com.mechanicalorchard.jclscan.model.Program;
 import com.mechanicalorchard.jclscan.service.JclAppParserService;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -16,9 +22,10 @@ public class JclAppParserTests {
   @Autowired
   JclAppParserService jclAppParserService;
 
-  @Test
-  void shouldParseJclApp() {
-    List<AppSourceFile> appSourceFiles = List.of(
+  private JclApp appUnderTest;
+
+  private List<AppSourceFile> sampleAppSourceFiles() {
+    return List.of(
         new AppSourceFile("DAILY01", Kind.JCL, """
             //DAILY01  JOB
             //STEP01   EXEC DAILYDO
@@ -26,6 +33,7 @@ public class JclAppParserTests {
         new AppSourceFile("DAILYDO", Kind.JCL, """
             //DAILYDO  PROC
             //DOTHING  EXEC PGM=ACTION01
+            //RPTTHING EXEC PGM=REPORT01
             """),
         new AppSourceFile("ACTION01", Kind.COBOL, """
             IDENTIFICATION DIVISION.
@@ -33,12 +41,62 @@ public class JclAppParserTests {
             PROCEDURE DIVISION.
             DISPLAY 'Hello, World!'.
             STOP RUN.
+            """),
+        new AppSourceFile("REPORT01", Kind.EASYTRIEVE, """
+            JOB INPUT
+            REPORT REPORT01
+
+              TITLE 'REPORT01'
+              LINE 01 'Test line'
+
+            END REPORT
             """)
     );
+  }
 
-    JclApp app = jclAppParserService.parse(appSourceFiles);
-    assertThat(app.getJobs()).size().isEqualTo(1);
-    assertThat(app.getProcLib().size()).isEqualTo(1);
-    assertThat(app.getLinkLib().size()).isEqualTo(1);
+  @BeforeEach
+  void buildSampleApp() {
+    appUnderTest = jclAppParserService.parse(sampleAppSourceFiles());
+  }
+
+  @Test
+  void shouldParseEmptyApp() {
+    JclApp app = jclAppParserService.parse(List.of());
+    assertThat(app.getJobs()).hasSize(0);
+    assertThat(app.getProcLib().size()).isEqualTo(0);
+    assertThat(app.getLinkLib().size()).isEqualTo(0);
+  }
+
+  @Test
+  void shouldPlaceJobsInJobsList() {
+    // implicit: only JCL marked as JOBs are treated as jobs (i.e. PROCs are not jobs)
+    assertThat(appUnderTest.getJobs()).hasSize(1);
+    JclFile job = appUnderTest.getJobs().get(0);
+    assertThat(job.getName()).isEqualTo("DAILY01");
+  }
+
+  @Test
+  void shouldPlaceProcsInProcLib() {
+    assertThat(appUnderTest.getProcLib().size()).isEqualTo(1);
+    JclFile proc = (JclFile) appUnderTest.getProcLib().resolve("DAILYDO");
+
+    assertThat(proc.getSteps()).hasSize(2);
+
+    assertThat(proc.getSteps().get(0).getName()).isEqualTo("DOTHING");
+    Program pgm = proc.getSteps().get(0).getPgm();
+    Objects.requireNonNull(pgm);
+    assertThat(pgm.getName()).isEqualTo("ACTION01");
+
+    assertThat(proc.getSteps().get(1).getName()).isEqualTo("RPTTHING");
+    pgm = proc.getSteps().get(1).getPgm();
+    Objects.requireNonNull(pgm);
+    assertThat(pgm.getName()).isEqualTo("REPORT01");
+  }
+
+  @Test
+  void shouldPlaceProgsInLinkLib() {
+    assertThat(appUnderTest.getLinkLib().size()).isEqualTo(2);
+    assertThat(appUnderTest.getLinkLib().resolve("ACTION01")).isInstanceOf(CobolFile.class);
+    assertThat(appUnderTest.getLinkLib().resolve("REPORT01")).isInstanceOf(EasytrieveFile.class);
   }
 }

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.mechanicalorchard.jclscan.model.AppSourceFile;
 import com.mechanicalorchard.jclscan.model.CobolFile;
+import com.mechanicalorchard.jclscan.model.EasytrieveFile;
 import com.mechanicalorchard.jclscan.model.JclApp;
 import com.mechanicalorchard.jclscan.model.JclFile;
 
@@ -18,6 +19,8 @@ public class JclAppParserService {
   private JclParserService jclParserService;
   @Autowired
   private CobolAnalyzerService cobolAnalyzerService;
+  @Autowired
+  private EasytrieveAnalyzerService easytrieveAnalyzerService;
 
   public JclApp parse(List<AppSourceFile> appSourceFiles) {
     JclApp app = new JclApp();
@@ -37,6 +40,10 @@ public class JclAppParserService {
           case AppSourceFile.Kind.COBOL:
             CobolFile cobolFile = cobolAnalyzerService.analyze(appSourceFile.getName(), source);
             app.getLinkLib().register(appSourceFile.getName(), cobolFile);
+            break;
+          case AppSourceFile.Kind.EASYTRIEVE:
+            EasytrieveFile easytrieveFile = easytrieveAnalyzerService.analyze(appSourceFile.getName(), source);
+            app.getLinkLib().register(appSourceFile.getName(), easytrieveFile);
             break;
           default:
             break;
