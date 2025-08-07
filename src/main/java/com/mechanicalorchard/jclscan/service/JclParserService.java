@@ -1,14 +1,10 @@
 package com.mechanicalorchard.jclscan.service;
 
-import com.mechanicalorchard.jclscan.model.AppSourceFile;
-import com.mechanicalorchard.jclscan.model.JclApp;
 import com.mechanicalorchard.jclscan.model.JclFile;
 import com.mechanicalorchard.jclscan.model.JclStep;
 import com.mechanicalorchard.jclscan.model.ProcRef;
 import com.mechanicalorchard.jclscan.model.ProgRef;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
