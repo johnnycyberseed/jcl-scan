@@ -22,7 +22,7 @@ public class CsvReportWriter implements ReportWriter {
                 writer.write(String.join(",",
                         escape(row.getFileName()),
                         escape(row.getProgramName()),
-                        escape(row.getProgramType()),
+                        escape(row.getKind().getLabel()),
                         Integer.toString(row.getLinesOfCode()),
                         Integer.toString(row.getNumberOfConditionals()),
                         Integer.toString(row.getNumberOfRoutines())));

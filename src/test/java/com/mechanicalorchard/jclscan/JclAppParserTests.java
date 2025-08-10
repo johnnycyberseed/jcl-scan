@@ -9,8 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import com.mechanicalorchard.jclscan.model.AppSourceFile;
 import com.mechanicalorchard.jclscan.model.AppSourceFile.Kind;
-import com.mechanicalorchard.jclscan.model.CobolFile;
-import com.mechanicalorchard.jclscan.model.EasytrieveFile;
+import com.mechanicalorchard.jclscan.model.ProgramSummary;
 import com.mechanicalorchard.jclscan.model.JclApp;
 import com.mechanicalorchard.jclscan.model.JclFile;
 import com.mechanicalorchard.jclscan.model.Program;
@@ -96,7 +95,7 @@ public class JclAppParserTests {
   @Test
   void shouldPlaceProgsInLinkLib() {
     assertThat(appUnderTest.getLinkLib().size()).isEqualTo(2);
-    assertThat(appUnderTest.getLinkLib().resolve("ACTION01")).isInstanceOf(CobolFile.class);
-    assertThat(appUnderTest.getLinkLib().resolve("REPORT01")).isInstanceOf(EasytrieveFile.class);
+    assertThat(appUnderTest.getLinkLib().resolve("ACTION01")).isInstanceOf(ProgramSummary.class);
+    assertThat(appUnderTest.getLinkLib().resolve("REPORT01")).isInstanceOf(ProgramSummary.class);
   }
 }
