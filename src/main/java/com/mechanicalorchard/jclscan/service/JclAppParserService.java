@@ -8,8 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.mechanicalorchard.jclscan.model.AppSourceFile;
-import com.mechanicalorchard.jclscan.model.CobolFile;
-import com.mechanicalorchard.jclscan.model.EasytrieveFile;
+import com.mechanicalorchard.jclscan.model.ProgramSummary;
 import com.mechanicalorchard.jclscan.model.JclApp;
 import com.mechanicalorchard.jclscan.model.JclFile;
 
@@ -29,7 +28,7 @@ public class JclAppParserService {
       try {
         String source = appSourceFile.getContent().getContentAsString(Charset.defaultCharset());
         switch(appSourceFile.getKind()) {
-          case AppSourceFile.Kind.JCL:
+          case JCL:
             JclFile jclFile = jclParserService.parseJclFile(source);
             if (jclFile.isJob()) {
               app.getJobs().add(jclFile);
@@ -37,12 +36,12 @@ public class JclAppParserService {
               app.getProcLib().register(appSourceFile.getName(), jclFile);
             }
             break;
-          case AppSourceFile.Kind.COBOL:
-            CobolFile cobolFile = cobolAnalyzerService.analyze(appSourceFile.getName(), source);
+          case COBOL:
+            ProgramSummary cobolFile = cobolAnalyzerService.analyze(appSourceFile.getName(), source);
             app.getLinkLib().register(appSourceFile.getName(), cobolFile);
             break;
-          case AppSourceFile.Kind.EASYTRIEVE:
-            EasytrieveFile easytrieveFile = easytrieveAnalyzerService.analyze(appSourceFile.getName(), source);
+          case EASYTRIEVE:
+            ProgramSummary easytrieveFile = easytrieveAnalyzerService.analyze(appSourceFile.getName(), source);
             app.getLinkLib().register(appSourceFile.getName(), easytrieveFile);
             break;
           default:

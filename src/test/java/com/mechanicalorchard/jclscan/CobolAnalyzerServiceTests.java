@@ -6,7 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.mechanicalorchard.jclscan.model.CobolFile;
+import com.mechanicalorchard.jclscan.model.Program;
+import com.mechanicalorchard.jclscan.model.ProgramSummary;
 import com.mechanicalorchard.jclscan.service.CobolAnalyzerService;
 
 @SpringBootTest
@@ -31,13 +32,16 @@ class CobolAnalyzerServiceTests {
     """;
 
     // When
-    CobolFile cobolFile = cobolAnalyzerService.analyze("HELLO.cbl", cobolContent);
+    ProgramSummary cobolFile = cobolAnalyzerService.analyze("HELLO.cbl", cobolContent);
 
     // Then
-    assertThat(cobolFile).isEqualTo(CobolFile.builder()
-        .id("HELLO.cbl")
-        .name("HELLO-WORLD")
+    assertThat(cobolFile).isEqualTo(ProgramSummary.builder()
+        .fileName("HELLO.cbl")
+        .programName("HELLO-WORLD")
+        .kind(Program.Kind.COBOL)
         .linesOfCode(5)
+        .numberOfConditionals(0)
+        .numberOfRoutines(0)
         .build());
   }
 }

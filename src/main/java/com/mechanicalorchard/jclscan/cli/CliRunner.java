@@ -8,6 +8,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import com.mechanicalorchard.jclscan.model.Program;
 import com.mechanicalorchard.jclscan.model.ProgramSummary;
 import com.mechanicalorchard.jclscan.service.AppService;
 
@@ -15,24 +16,37 @@ import com.mechanicalorchard.jclscan.service.AppService;
 @ConditionalOnProperty(name = "jclscan.cli.enabled", havingValue = "true", matchIfMissing = true)
 public class CliRunner implements CommandLineRunner {
 
-    private final AppService appService;
+  private final AppService appService;
 
-    public CliRunner(AppService appService) {
-        this.appService = appService;
-    }
+  public CliRunner(AppService appService) {
+    this.appService = appService;
+  }
 
-    @Override
-    public void run(String... args) {
-        try {
-            List<ProgramSummary> summaries = List.of(
-                new ProgramSummary("PAYROLL1.cbl", "PAYROLL1", "COBOL", 123, 10, 3),
-                new ProgramSummary("EZT1.ezt", "EZT1", "Easytrieve", 200, 8, 5)
-            );
-            appService.scan(Path.of("program-report.csv"), summaries);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+  @Override
+  public void run(String... args) {
+    try {
+      List<ProgramSummary> summaries = List.of(
+          ProgramSummary.builder()
+              .fileName("PAYROLL1.cbl")
+              .programName("PAYROLL1")
+              .kind(Program.Kind.COBOL)
+              .linesOfCode(123)
+              .numberOfConditionals(10)
+              .numberOfRoutines(3)
+              .build(),
+
+          ProgramSummary
+              .builder()
+              .fileName("EZT1.ezt")
+              .programName("EZT1")
+              .kind(Program.Kind.EASYTRIEVE)
+              .linesOfCode(200)
+              .numberOfConditionals(8)
+              .numberOfRoutines(5)
+              .build());
+      appService.scan(Path.of("program-report.csv"), summaries);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
+  }
 }
-
-

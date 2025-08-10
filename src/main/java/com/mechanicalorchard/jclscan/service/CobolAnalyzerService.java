@@ -2,7 +2,8 @@ package com.mechanicalorchard.jclscan.service;
 
 import org.springframework.stereotype.Service;
 
-import com.mechanicalorchard.jclscan.model.CobolFile;
+import com.mechanicalorchard.jclscan.model.Program;
+import com.mechanicalorchard.jclscan.model.ProgramSummary;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -12,14 +13,17 @@ public class CobolAnalyzerService {
 
   private static final Pattern PROGRAM_ID_PATTERN = Pattern.compile("PROGRAM-ID\\.\\s+([A-Z0-9\\-]+)");
 
-  public CobolFile analyze(String cobolName, String cobolContent) {
+  public ProgramSummary analyze(String cobolName, String cobolContent) {
     String programName = extractProgramId(cobolContent);
     int linesOfCode = countLinesOfCode(cobolContent);
     
-    return CobolFile.builder()
-        .id(cobolName)
-        .name(programName)
+    return ProgramSummary.builder()
+        .fileName(cobolName)
+        .programName(programName)
+        .kind(Program.Kind.COBOL)
         .linesOfCode(linesOfCode)
+        .numberOfConditionals(0)
+        .numberOfRoutines(0)
         .build();
   }
 

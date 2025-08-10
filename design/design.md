@@ -26,6 +26,6 @@ Provide a (high-level) set of services used by the CLI:
 
 Provide a (low-level) set of services used by Application Services:
 - given an AppSourceFile of Kind JCL, parse it into a JclFile
-- given an AppSourceFile of Kind COBOL, summarize it into a CobolFile
-- given an AppSourceFile of Kind Easytrieve, summarize it into a EasytrieveFile
+- given an AppSourceFile of Kind COBOL, summarize it into a ProgramSummary (Program.Kind.COBOL)
+- given an AppSourceFile of Kind Easytrieve, summarize it into a ProgramSummary (Program.Kind.EASYTRIEVE)
 - given an AppSourceFile of Kind Assembler, summarize it into an AssemblerFile

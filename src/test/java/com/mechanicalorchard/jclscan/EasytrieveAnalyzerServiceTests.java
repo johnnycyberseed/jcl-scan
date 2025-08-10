@@ -6,7 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.mechanicalorchard.jclscan.model.EasytrieveFile;
+import com.mechanicalorchard.jclscan.model.Program;
+import com.mechanicalorchard.jclscan.model.ProgramSummary;
 import com.mechanicalorchard.jclscan.service.EasytrieveAnalyzerService;
 
 @SpringBootTest
@@ -36,13 +37,16 @@ class EasytrieveAnalyzerServiceTests {
     """;
 
     // When
-    EasytrieveFile easytrieveFile = easytrieveAnalyzerService.analyze("HELLO.ezt", easytrieveContent);
+    ProgramSummary easytrieveFile = easytrieveAnalyzerService.analyze("HELLO.ezt", easytrieveContent);
 
     // Then
-    assertThat(easytrieveFile).isEqualTo(EasytrieveFile.builder()
-        .name("HELLO-WORLD")
-        .id("HELLO.ezt")
+    assertThat(easytrieveFile).isEqualTo(ProgramSummary.builder()
+        .programName("HELLO-WORLD")
+        .fileName("HELLO.ezt")
+        .kind(Program.Kind.EASYTRIEVE)
         .linesOfCode(7)
+        .numberOfConditionals(0)
+        .numberOfRoutines(0)
         .build());
   }
 }
