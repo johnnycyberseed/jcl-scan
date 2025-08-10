@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import com.mechanicalorchard.jclscan.service.AppService;
+import com.mechanicalorchard.jclscan.model.ProgramSummary;
+import java.util.List;
 
 @SpringBootTest
 class AppServiceIteration1Tests {
@@ -24,7 +26,12 @@ class AppServiceIteration1Tests {
     void scan_writesProgramReportCsvToDisk(@TempDir Path tempDir) throws IOException {
         Path outputFile = tempDir.resolve("program-report.csv");
 
-        appService.scan(outputFile);
+        List<ProgramSummary> summaries = List.of(
+            new ProgramSummary("PAYROLL1.cbl", "PAYROLL1", "COBOL", 123, 10, 3),
+            new ProgramSummary("EZT1.ezt", "EZT1", "Easytrieve", 200, 8, 5)
+        );
+
+        appService.scan(outputFile, summaries);
 
         assertThat(Files.exists(outputFile)).isTrue();
 
