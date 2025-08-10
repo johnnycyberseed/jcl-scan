@@ -3,7 +3,7 @@ package com.mechanicalorchard.jclscan;
 import com.mechanicalorchard.jclscan.model.JclFile;
 import com.mechanicalorchard.jclscan.model.JclStep;
 import com.mechanicalorchard.jclscan.model.ProcRef;
-import com.mechanicalorchard.jclscan.model.ProgRef;
+import com.mechanicalorchard.jclscan.model.ProgramRef;
 import com.mechanicalorchard.jclscan.service.JclParserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -41,7 +41,7 @@ class JclFileParserTests {
                 .isJob(true)
                 .steps(List.of(JclStep.builder()
                     .name("STEP11")
-                    .pgm(ProgRef.builder().name("MYCBL1").build())
+                    .pgm(ProgramRef.builder().name("MYCBL1").build())
                     .proc(null)
                     .build()))
                 .build()),
@@ -72,7 +72,7 @@ class JclFileParserTests {
                 .name("PROC1")
                 .steps(List.of(JclStep.builder()
                     .name("STEP31")
-                    .pgm(ProgRef.builder().name("MYCBL3").build())
+                    .pgm(ProgramRef.builder().name("MYCBL3").build())
                     .proc(null)
 
                     .build()))
@@ -117,7 +117,7 @@ class JclFileParserTests {
                 .isJob(true)
                 .steps(List.of(JclStep.builder()
                     .name("STEP11")
-                    .pgm(ProgRef.builder().name("MYCBL1").build())
+                    .pgm(ProgramRef.builder().name("MYCBL1").build())
                     .proc(null)
                     .build()))
                 .build()),
@@ -132,7 +132,7 @@ class JclFileParserTests {
                 .isJob(true)
                 .steps(List.of(JclStep.builder()
                     .name("STEP11")
-                    .pgm(ProgRef.builder().name("MYCBL1").build())
+                    .pgm(ProgramRef.builder().name("MYCBL1").build())
                     .proc(null)
                     .build()))
                 .build()),
@@ -148,7 +148,7 @@ class JclFileParserTests {
                 .isJob(true)
                 .steps(List.of(JclStep.builder()
                     .name("STEP11")
-                    .pgm(ProgRef.builder().name("MYCBL1").build())
+                    .pgm(ProgramRef.builder().name("MYCBL1").build())
                     .proc(null)
                     .build()))
                 .build()));
@@ -178,7 +178,7 @@ class JclFileParserTests {
                 .isJob(true)
                 .steps(List.of(JclStep.builder()
                     .name("STEP11")
-                    .pgm(ProgRef.builder().name("MYPROG").build())
+                    .pgm(ProgramRef.builder().name("MYPROG").build())
                     .proc(null)
                     .symbolicParameters(Map.of(
                         "PARAM1", "VALUE1",
@@ -197,7 +197,7 @@ class JclFileParserTests {
                 .name("SIMPLE2")
                 .steps(List.of(JclStep.builder()
                     .name("STEP21")
-                    .pgm(ProgRef.builder().name("MYPROG").build())
+                    .pgm(ProgramRef.builder().name("MYPROG").build())
                     .proc(null)
                     .symbolicParameters(Map.of(
                         "PARAM1", "&PARAM1",
@@ -216,7 +216,7 @@ class JclFileParserTests {
                 .name("SIMPLE2")
                 .steps(List.of(JclStep.builder()
                     .name("STEP21")
-                    .pgm(ProgRef.builder().name("MYPROG").build())
+                    .pgm(ProgramRef.builder().name("MYPROG").build())
                     .proc(null)
                     .symbolicParameters(Map.of(
                         "VALUE1", "@VALUE1@",

@@ -3,7 +3,7 @@ package com.mechanicalorchard.jclscan.service;
 import com.mechanicalorchard.jclscan.model.JclFile;
 import com.mechanicalorchard.jclscan.model.JclStep;
 import com.mechanicalorchard.jclscan.model.ProcRef;
-import com.mechanicalorchard.jclscan.model.ProgRef;
+import com.mechanicalorchard.jclscan.model.ProgramRef;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -76,7 +76,7 @@ public class JclParserService {
       
       // Extract PGM parameter if present
       String pgmName = extractParameter(parameterList, PGM_PARAM_PATTERN);
-      ProgRef progRef = pgmName != null ? ProgRef.builder().name(pgmName).build() : null;
+      ProgramRef progRef = pgmName != null ? ProgramRef.builder().name(pgmName).build() : null;
 
       // Extract PROC parameter if present (named PROC= takes precedence over positional)
       String procName = extractParameter(parameterList, PROC_PARAM_PATTERN);
