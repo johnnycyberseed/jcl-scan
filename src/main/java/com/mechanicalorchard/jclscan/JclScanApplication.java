@@ -1,14 +1,33 @@
 package com.mechanicalorchard.jclscan;
 
+import java.io.IOException;
+import java.nio.file.Path;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import com.mechanicalorchard.jclscan.service.AppService;
+
 @SpringBootApplication
-public class JclScanApplication {
+public class JclScanApplication implements CommandLineRunner {
+
+  @Autowired
+  private AppService appService;
 
 	public static void main(String[] args) {
 		SpringApplication.run(JclScanApplication.class, args);
 	}
+
+    @Override
+    public void run(String... args) {
+      try {
+        appService.scan(Path.of("program-report.csv"));
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
 
   /*
    * Sketch
