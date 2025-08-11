@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -80,6 +81,75 @@ class SourceDiscovererTests {
     assertThat(discovered.get(3).getName()).isEqualTo("EZT1.ezt");
     assertThat(discovered.get(3).getKind()).isEqualTo(AppSourceFile.Kind.EASYTRIEVE);
     assertThat(discovered.get(3).getContent().getContentAsString(StandardCharsets.UTF_8))
+        .isEqualTo(Files.readString(ezt, StandardCharsets.UTF_8));
+  }
+
+  @Test
+  void discover_traversesDirectoriesRecursively(@TempDir Path tempDir) throws IOException {
+    Path root = tempDir.resolve("app");
+    Path jobsDir = root.resolve("jobs");
+    Path procsDir = root.resolve("procs");
+    Path pgmsDir = root.resolve("pgms");
+    Files.createDirectories(jobsDir);
+    Files.createDirectories(procsDir);
+    Files.createDirectories(pgmsDir);
+
+    Path job = jobsDir.resolve("DAILY01.jcl");
+    Path proc = procsDir.resolve("DAILYDO.jcl");
+    Path cobol = pgmsDir.resolve("PAYROLL1.cbl");
+    Path ezt = pgmsDir.resolve("EZT1.ezt");
+
+    Files.writeString(job, """
+        //DAILY01  JOB
+        //STEP01   EXEC DAILYDO
+        """.strip(), StandardCharsets.UTF_8);
+
+    Files.writeString(proc, """
+        //DAILYDO  PROC
+        //DOTHING  EXEC PGM=PAYROLL1
+        //RPTTHING EXEC PGM=EZT1
+        """.strip(), StandardCharsets.UTF_8);
+
+    Files.writeString(cobol, """
+        IDENTIFICATION DIVISION.
+        PROGRAM-ID. PAYROLL1.
+        PROCEDURE DIVISION.
+        STOP RUN.
+        """.strip(), StandardCharsets.UTF_8);
+
+    Files.writeString(ezt, """
+        JOB INPUT
+        REPORT EZT1
+
+          TITLE 'EZT1'
+          LINE 01 'Test line'
+
+        END REPORT
+        """.strip(), StandardCharsets.UTF_8);
+
+    List<AppSourceFile> discovered = sourceDiscoverer.discover(List.of(root));
+
+    assertThat(discovered).hasSize(4);
+
+    // Build a quick lookup by file name (order not guaranteed from directory walk)
+    Map<String, AppSourceFile> byName = discovered.stream().collect(java.util.stream.Collectors.toMap(AppSourceFile::getName, x -> x));
+
+    assertThat(byName).containsKeys("DAILY01.jcl", "DAILYDO.jcl", "PAYROLL1.cbl", "EZT1.ezt");
+
+    assertThat(byName.get("DAILY01.jcl").getKind()).isEqualTo(AppSourceFile.Kind.JCL);
+    assertThat(byName.get("DAILY01.jcl").getContent().getContentAsString(StandardCharsets.UTF_8))
+        .isEqualTo(Files.readString(job, StandardCharsets.UTF_8));
+
+    assertThat(byName.get("DAILYDO.jcl").getKind()).isEqualTo(AppSourceFile.Kind.JCL);
+    assertThat(byName.get("DAILYDO.jcl").getContent().getContentAsString(StandardCharsets.UTF_8))
+        .isEqualTo(Files.readString(proc, StandardCharsets.UTF_8));
+
+    assertThat(byName.get("PAYROLL1.cbl").getKind()).isEqualTo(AppSourceFile.Kind.COBOL);
+    assertThat(byName.get("PAYROLL1.cbl").getContent().getContentAsString(StandardCharsets.UTF_8))
+        .isEqualTo(Files.readString(cobol, StandardCharsets.UTF_8));
+
+    assertThat(byName.get("EZT1.ezt").getKind()).isEqualTo(AppSourceFile.Kind.EASYTRIEVE);
+    assertThat(byName.get("EZT1.ezt").getContent().getContentAsString(StandardCharsets.UTF_8))
         .isEqualTo(Files.readString(ezt, StandardCharsets.UTF_8));
   }
 }

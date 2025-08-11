@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -24,7 +25,49 @@ class AppServiceIteration1Tests {
   void scan_writesProgramReportCsvToDisk(@TempDir Path tempDir) throws IOException {
     Path outputFile = tempDir.resolve("program-report.csv");
 
-    appScanner.scan(outputFile);
+    // Prepare sample inputs on disk in nested directories
+    Path root = tempDir.resolve("app");
+    Path jobsDir = root.resolve("jobs");
+    Path procsDir = root.resolve("procs");
+    Path pgmsDir = root.resolve("pgms");
+    Files.createDirectories(jobsDir);
+    Files.createDirectories(procsDir);
+    Files.createDirectories(pgmsDir);
+
+    Path job = jobsDir.resolve("DAILY01.jcl");
+    Path proc = procsDir.resolve("DAILYDO.jcl");
+    Path cobol = pgmsDir.resolve("PAYROLL1.cbl");
+    Path ezt = pgmsDir.resolve("EZT1.ezt");
+
+    Files.writeString(job, """
+        //DAILY01  JOB
+        //STEP01   EXEC DAILYDO
+        """.strip(), StandardCharsets.UTF_8);
+
+    Files.writeString(proc, """
+        //DAILYDO  PROC
+        //DOTHING  EXEC PGM=PAYROLL1
+        //RPTTHING EXEC PGM=EZT1
+        """.strip(), StandardCharsets.UTF_8);
+
+    Files.writeString(cobol, """
+        IDENTIFICATION DIVISION.
+        PROGRAM-ID. PAYROLL1.
+        PROCEDURE DIVISION.
+        STOP RUN.
+        """.strip(), StandardCharsets.UTF_8);
+
+    Files.writeString(ezt, """
+        JOB INPUT
+        REPORT EZT1
+
+          TITLE 'EZT1'
+          LINE 01 'Test line'
+
+        END REPORT
+        """.strip(), StandardCharsets.UTF_8);
+
+    appScanner.scan(outputFile, List.of(root));
 
     assertThat(Files.exists(outputFile)).isTrue();
 
