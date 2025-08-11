@@ -13,9 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import com.mechanicalorchard.jclscan.service.AppScanner;
-import com.mechanicalorchard.jclscan.model.ProgramSummary;
-import com.mechanicalorchard.jclscan.model.Program;
-import java.util.List;
 
 @SpringBootTest
 class AppServiceIteration1Tests {
@@ -27,27 +24,7 @@ class AppServiceIteration1Tests {
   void scan_writesProgramReportCsvToDisk(@TempDir Path tempDir) throws IOException {
     Path outputFile = tempDir.resolve("program-report.csv");
 
-    List<ProgramSummary> summaries = List.of(
-        ProgramSummary
-            .builder()
-            .fileName("PAYROLL1.cbl")
-            .programName("PAYROLL1")
-            .kind(Program.Kind.COBOL)
-            .linesOfCode(123)
-            .numberOfConditionals(10)
-            .numberOfRoutines(3)
-            .build(),
-        ProgramSummary
-            .builder()
-            .fileName("EZT1.ezt")
-            .programName("EZT1")
-            .kind(Program.Kind.EASYTRIEVE)
-            .linesOfCode(200)
-            .numberOfConditionals(8)
-            .numberOfRoutines(5)
-            .build());
-
-    appScanner.scan(outputFile, summaries);
+    appScanner.scan(outputFile);
 
     assertThat(Files.exists(outputFile)).isTrue();
 
@@ -55,8 +32,8 @@ class AppServiceIteration1Tests {
 
     String expected = String.join("\n",
         "File Name,Program Name,Program Type,Lines of Code,Number of conditionals,Number of routines",
-        "PAYROLL1.cbl,PAYROLL1,COBOL,123,10,3",
-        "EZT1.ezt,EZT1,Easytrieve,200,8,5",
+        "PAYROLL1.cbl,PAYROLL1,COBOL,4,0,0",
+        "EZT1.ezt,EZT1,Easytrieve,5,0,0",
         "");
 
     assertThat(content).isEqualTo(expected);
