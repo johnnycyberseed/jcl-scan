@@ -17,16 +17,31 @@ public class SourceDiscoverer {
   public List<AppSourceFile> discover(List<Path> paths) throws IOException {
     List<AppSourceFile> discovered = new ArrayList<>();
     for (Path path : paths) {
+      if (Files.isDirectory(path)) {
+        try (var stream = Files.walk(path)) {
+          stream
+              .filter(Files::isRegularFile)
+              .forEach(p -> addIfKnown(discovered, p));
+        }
+      } else {
+        addIfKnown(discovered, path);
+      }
+    }
+    return discovered;
+  }
+
+  private void addIfKnown(List<AppSourceFile> out, Path path) {
+    try {
       String fileName = path.getFileName().toString();
       AppSourceFile.Kind kind = mapExtensionToKind(fileName);
       if (kind == null) {
-        // Skip unknown types for now
-        continue;
+        return;
       }
       String content = Files.readString(path, StandardCharsets.UTF_8);
-      discovered.add(new AppSourceFile(fileName, kind, content));
+      out.add(new AppSourceFile(fileName, kind, content));
+    } catch (IOException e) {
+      throw new RuntimeException("Failed reading " + path, e);
     }
-    return discovered;
   }
 
   private AppSourceFile.Kind mapExtensionToKind(String fileName) {
