@@ -12,7 +12,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.mechanicalorchard.jclscan.service.AppService;
+import com.mechanicalorchard.jclscan.service.AppScanner;
 import com.mechanicalorchard.jclscan.model.ProgramSummary;
 import com.mechanicalorchard.jclscan.model.Program;
 import java.util.List;
@@ -21,7 +21,7 @@ import java.util.List;
 class AppServiceIteration1Tests {
 
   @Autowired
-  private AppService appService;
+  private AppScanner appScanner;
 
   @Test
   void scan_writesProgramReportCsvToDisk(@TempDir Path tempDir) throws IOException {
@@ -47,7 +47,7 @@ class AppServiceIteration1Tests {
             .numberOfRoutines(5)
             .build());
 
-    appService.scan(outputFile, summaries);
+    appScanner.scan(outputFile, summaries);
 
     assertThat(Files.exists(outputFile)).isTrue();
 

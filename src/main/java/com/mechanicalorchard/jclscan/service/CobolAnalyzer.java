@@ -9,7 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
-public class CobolAnalyzerService {
+public class CobolAnalyzer {
 
   private static final Pattern PROGRAM_ID_PATTERN = Pattern.compile("PROGRAM-ID\\.\\s+([A-Z0-9\\-]+)");
 

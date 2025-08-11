@@ -9,7 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
-public class EasytrieveAnalyzerService {
+public class EasytrieveAnalyzer {
 
   private static final Pattern REPORT_PATTERN = Pattern.compile("REPORT\\s+([A-Z0-9\\-]+)");
 

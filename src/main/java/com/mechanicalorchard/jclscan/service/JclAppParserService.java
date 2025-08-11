@@ -17,9 +17,9 @@ public class JclAppParserService {
   @Autowired
   private JclParserService jclParserService;
   @Autowired
-  private CobolAnalyzerService cobolAnalyzerService;
+  private CobolAnalyzer cobolAnalyzer;
   @Autowired
-  private EasytrieveAnalyzerService easytrieveAnalyzerService;
+  private EasytrieveAnalyzer easytrieveAnalyzer;
 
   public JclApp parse(List<AppSourceFile> appSourceFiles) {
     JclApp app = new JclApp();
@@ -37,11 +37,11 @@ public class JclAppParserService {
             }
             break;
           case COBOL:
-            ProgramSummary cobolFile = cobolAnalyzerService.analyze(appSourceFile.getName(), source);
+            ProgramSummary cobolFile = cobolAnalyzer.analyze(appSourceFile.getName(), source);
             app.getLinkLib().register(appSourceFile.getName(), cobolFile);
             break;
           case EASYTRIEVE:
-            ProgramSummary easytrieveFile = easytrieveAnalyzerService.analyze(appSourceFile.getName(), source);
+            ProgramSummary easytrieveFile = easytrieveAnalyzer.analyze(appSourceFile.getName(), source);
             app.getLinkLib().register(appSourceFile.getName(), easytrieveFile);
             break;
           default:
