@@ -10,16 +10,16 @@ import org.springframework.stereotype.Component;
 
 import com.mechanicalorchard.jclscan.model.Program;
 import com.mechanicalorchard.jclscan.model.ProgramSummary;
-import com.mechanicalorchard.jclscan.service.AppService;
+import com.mechanicalorchard.jclscan.service.AppScanner;
 
 @Component
 @ConditionalOnProperty(name = "jclscan.cli.enabled", havingValue = "true", matchIfMissing = true)
 public class CliRunner implements CommandLineRunner {
 
-  private final AppService appService;
+  private final AppScanner appScanner;
 
-  public CliRunner(AppService appService) {
-    this.appService = appService;
+  public CliRunner(AppScanner appScanner) {
+    this.appScanner = appScanner;
   }
 
   @Override
@@ -44,7 +44,7 @@ public class CliRunner implements CommandLineRunner {
               .numberOfConditionals(8)
               .numberOfRoutines(5)
               .build());
-      appService.scan(Path.of("program-report.csv"), summaries);
+      appScanner.scan(Path.of("program-report.csv"), summaries);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

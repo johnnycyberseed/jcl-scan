@@ -8,13 +8,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import com.mechanicalorchard.jclscan.model.Program;
 import com.mechanicalorchard.jclscan.model.ProgramSummary;
-import com.mechanicalorchard.jclscan.service.EasytrieveAnalyzerService;
+import com.mechanicalorchard.jclscan.service.EasytrieveAnalyzer;
 
 @SpringBootTest
-class EasytrieveAnalyzerServiceTests {
+class EasytrieveAnalyzerTests {
 
   @Autowired
-  private EasytrieveAnalyzerService easytrieveAnalyzerService;
+  private EasytrieveAnalyzer easytrieveAnalyzer;
 
   @Test
   void contextLoads() {
@@ -37,7 +37,7 @@ class EasytrieveAnalyzerServiceTests {
     """;
 
     // When
-    ProgramSummary easytrieveFile = easytrieveAnalyzerService.analyze("HELLO.ezt", easytrieveContent);
+    ProgramSummary easytrieveFile = easytrieveAnalyzer.analyze("HELLO.ezt", easytrieveContent);
 
     // Then
     assertThat(easytrieveFile).isEqualTo(ProgramSummary.builder()

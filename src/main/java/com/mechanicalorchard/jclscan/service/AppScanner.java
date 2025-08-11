@@ -11,7 +11,7 @@ import com.mechanicalorchard.jclscan.model.ProgramReport;
 import com.mechanicalorchard.jclscan.model.ProgramSummary;
 
 @Service
-public class AppService {
+public class AppScanner {
 
     @Autowired
     private ReportWriter reportWriter;

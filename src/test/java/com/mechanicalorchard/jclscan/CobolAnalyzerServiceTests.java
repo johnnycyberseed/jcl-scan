@@ -8,13 +8,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import com.mechanicalorchard.jclscan.model.Program;
 import com.mechanicalorchard.jclscan.model.ProgramSummary;
-import com.mechanicalorchard.jclscan.service.CobolAnalyzerService;
+import com.mechanicalorchard.jclscan.service.CobolAnalyzer;
 
 @SpringBootTest
-class CobolAnalyzerServiceTests {
+class CobolAnalyzerTests {
 
   @Autowired
-  private CobolAnalyzerService cobolAnalyzerService;
+  private CobolAnalyzer cobolAnalyzer;
 
   @Test
   void contextLoads() {
@@ -32,7 +32,7 @@ class CobolAnalyzerServiceTests {
     """;
 
     // When
-    ProgramSummary cobolFile = cobolAnalyzerService.analyze("HELLO.cbl", cobolContent);
+    ProgramSummary cobolFile = cobolAnalyzer.analyze("HELLO.cbl", cobolContent);
 
     // Then
     assertThat(cobolFile).isEqualTo(ProgramSummary.builder()
