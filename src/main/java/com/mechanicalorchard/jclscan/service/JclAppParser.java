@@ -13,9 +13,9 @@ import com.mechanicalorchard.jclscan.model.JclApp;
 import com.mechanicalorchard.jclscan.model.JclFile;
 
 @Service
-public class JclAppParserService {
+public class JclAppParser {
   @Autowired
-  private JclParserService jclParserService;
+  private JclParser jclParserService;
   @Autowired
   private CobolAnalyzer cobolAnalyzer;
   @Autowired

@@ -4,7 +4,7 @@ import com.mechanicalorchard.jclscan.model.JclFile;
 import com.mechanicalorchard.jclscan.model.JclStep;
 import com.mechanicalorchard.jclscan.model.ProcRef;
 import com.mechanicalorchard.jclscan.model.ProgramRef;
-import com.mechanicalorchard.jclscan.service.JclParserService;
+import com.mechanicalorchard.jclscan.service.JclParser;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class JclFileParserTests {
 
   @Autowired
-  private JclParserService jclParserService;
+  private JclParser jclParserService;
 
   @Test
   void contextLoads() {

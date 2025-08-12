@@ -22,7 +22,7 @@ public class AppScanner {
   private ProgramReportBuilder programReportBuilder;
 
   @Autowired
-  private JclAppParserService jclAppParserService;
+  private JclAppParser jclAppParserService;
 
   @Autowired
   private SourceDiscoverer sourceDiscoverer;

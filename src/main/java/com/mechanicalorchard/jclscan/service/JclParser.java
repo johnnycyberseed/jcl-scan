@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 import org.springframework.stereotype.Service;
 
 @Service
-public class JclParserService {
+public class JclParser {
 
   private static final Pattern JOB_PATTERN = Pattern.compile("^//([A-Z0-9]+)\\s+JOB\\s+.*",
       Pattern.MULTILINE);
