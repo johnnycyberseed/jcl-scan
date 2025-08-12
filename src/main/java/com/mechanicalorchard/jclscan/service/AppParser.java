@@ -16,9 +16,9 @@ import com.mechanicalorchard.jclscan.model.Procedure;
 import com.mechanicalorchard.jclscan.model.ProcedureRef;
 
 @Service
-public class JclAppParser {
+public class AppParser {
   @Autowired
-  private JclParser jclParserService;
+  private JclParser jclParser;
   @Autowired
   private CobolAnalyzer cobolAnalyzer;
   @Autowired
@@ -32,7 +32,7 @@ public class JclAppParser {
         String source = appSourceFile.getContent().getContentAsString(Charset.defaultCharset());
         switch(appSourceFile.getKind()) {
           case JCL:
-            JclScript jclFile = jclParserService.parseJclFile(source);
+            JclScript jclFile = jclParser.parseJclFile(source);
             switch (jclFile) {
               case Job job -> app.getJobs().add(job);
               case Procedure proc -> app.getProcLib().register(appSourceFile.getName(), proc);

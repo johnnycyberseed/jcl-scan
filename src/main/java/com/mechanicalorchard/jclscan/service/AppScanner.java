@@ -22,7 +22,7 @@ public class AppScanner {
   private ProgramReportBuilder programReportBuilder;
 
   @Autowired
-  private JclAppParser jclAppParserService;
+  private AppParser appParser;
 
   @Autowired
   private SourceDiscoverer sourceDiscoverer;
@@ -33,7 +33,7 @@ public class AppScanner {
 
   public void scan(Path programReportOutputFile, List<Path> inputPaths) throws IOException {
     List<AppSourceFile> sources = sourceDiscoverer.discover(inputPaths);
-    JclApp app = jclAppParserService.parse(sources);
+    JclApp app = appParser.parse(sources);
     List<ProgramSummary> summaries = app.getLinkLib().registered().stream()
         .map(p -> (ProgramSummary) p)
         .toList();

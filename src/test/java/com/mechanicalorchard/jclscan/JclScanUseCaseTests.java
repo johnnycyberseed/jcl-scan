@@ -16,7 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.mechanicalorchard.jclscan.service.AppScanner;
 
 @SpringBootTest
-class AppServiceIteration1Tests {
+class JclScanUseCaseTests {
 
   @Autowired
   private AppScanner appScanner;
