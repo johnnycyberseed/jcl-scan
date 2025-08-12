@@ -21,10 +21,10 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-class JclFileParserTests {
+class JclParserTests {
 
   @Autowired
-  private JclParser jclParserService;
+  private JclParser jclParser;
 
   @Test
   void contextLoads() {
@@ -97,7 +97,7 @@ class JclFileParserTests {
   @MethodSource("jclTestCases")
   void shouldParseJcl(String jclContent, JclScript expectedFile) {
     // When
-    JclScript actualFile = jclParserService.parseJclFile(jclContent);
+    JclScript actualFile = jclParser.parseJclFile(jclContent);
 
     // Then
     assertThat(actualFile).isEqualTo(expectedFile);
@@ -154,7 +154,7 @@ class JclFileParserTests {
   @MethodSource("sameJclWithParamsInDifferentOrder")
   void shouldFindNamedParamsRegardlessOfOrder(String jclContent, JclScript expectedFile) {
     // When
-    JclScript actualFile = jclParserService.parseJclFile(jclContent);
+    JclScript actualFile = jclParser.parseJclFile(jclContent);
 
     // Then
     assertThat(actualFile).isEqualTo(expectedFile);
@@ -225,7 +225,7 @@ class JclFileParserTests {
   @MethodSource("simpleJclWithVariousCombinationsOfParams")
   void shouldStoreAllParams(String jclContent, JclScript expectedFile) {
     // When
-    JclScript actualFile = jclParserService.parseJclFile(jclContent);
+    JclScript actualFile = jclParser.parseJclFile(jclContent);
 
     // Then
     assertThat(actualFile).isEqualTo(expectedFile);
@@ -233,14 +233,14 @@ class JclFileParserTests {
 
   @Test
   void shouldReportIsJobWhenIsJob() {
-    JclScript actualFile = jclParserService.parseJclFile("""
+    JclScript actualFile = jclParser.parseJclFile("""
       //IMAJOB  JOB
       //STEP01  EXEC DUMMY
         """);
 
     assertThat(actualFile instanceof Job).isTrue();
 
-    actualFile = jclParserService.parseJclFile("""
+    actualFile = jclParser.parseJclFile("""
       //IMAJOB  PROC
       //STEP01  EXEC DUMMY
         """);

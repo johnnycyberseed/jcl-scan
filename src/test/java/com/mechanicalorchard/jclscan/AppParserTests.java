@@ -14,13 +14,13 @@ import com.mechanicalorchard.jclscan.model.JclApp;
 import com.mechanicalorchard.jclscan.model.Procedure;
 import com.mechanicalorchard.jclscan.model.Job;
 import com.mechanicalorchard.jclscan.model.Program;
-import com.mechanicalorchard.jclscan.service.JclAppParser;
+import com.mechanicalorchard.jclscan.service.AppParser;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-public class JclAppParserTests {
+public class AppParserTests {
   @Autowired
-  JclAppParser jclAppParserService;
+  AppParser appParser;
 
   private JclApp appUnderTest;
 
@@ -56,12 +56,12 @@ public class JclAppParserTests {
 
   @BeforeEach
   void buildSampleApp() {
-    appUnderTest = jclAppParserService.parse(sampleAppSourceFiles());
+    appUnderTest = appParser.parse(sampleAppSourceFiles());
   }
 
   @Test
   void shouldParseEmptyApp() {
-    JclApp app = jclAppParserService.parse(List.of());
+    JclApp app = appParser.parse(List.of());
     assertThat(app.getJobs()).hasSize(0);
     assertThat(app.getProcLib().size()).isEqualTo(0);
     assertThat(app.getLinkLib().size()).isEqualTo(0);
