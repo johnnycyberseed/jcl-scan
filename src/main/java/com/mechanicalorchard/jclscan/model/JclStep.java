@@ -14,7 +14,7 @@ public class JclStep {
   @Nullable
   private Program pgm;
   @Nullable
-  private JclProc proc;
+  private JclScript proc;
   @Builder.Default
   private Map<String, String> symbolicParameters = new HashMap<>();
 

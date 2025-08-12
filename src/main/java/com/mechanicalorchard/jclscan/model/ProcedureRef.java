@@ -5,6 +5,6 @@ import lombok.Data;
 
 @Data
 @Builder
-public final class ProcRef implements JclProc {
+public final class ProcedureRef implements JclScript {
     private String name;
 }

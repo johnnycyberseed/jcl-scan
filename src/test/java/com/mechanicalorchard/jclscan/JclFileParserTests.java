@@ -1,8 +1,10 @@
 package com.mechanicalorchard.jclscan;
 
-import com.mechanicalorchard.jclscan.model.JclFile;
+import com.mechanicalorchard.jclscan.model.Procedure;
+import com.mechanicalorchard.jclscan.model.Job;
+import com.mechanicalorchard.jclscan.model.JclScript;
 import com.mechanicalorchard.jclscan.model.JclStep;
-import com.mechanicalorchard.jclscan.model.ProcRef;
+import com.mechanicalorchard.jclscan.model.ProcedureRef;
 import com.mechanicalorchard.jclscan.model.ProgramRef;
 import com.mechanicalorchard.jclscan.service.JclParser;
 import org.junit.jupiter.api.Test;
@@ -36,9 +38,8 @@ class JclFileParserTests {
                 //* Simple job that calls a COBOL program
                 //STEP11 EXEC PGM=MYCBL1
                 """,
-            JclFile.builder()
+            Job.builder()
                 .name("SIMPLE1")
-                .isJob(true)
                 .steps(List.of(JclStep.builder()
                     .name("STEP11")
                     .pgm(ProgramRef.builder().name("MYCBL1").build())
@@ -52,13 +53,12 @@ class JclFileParserTests {
                 //* During parsing, we place a reference; presumably we'll resolve it later.
                 //STEP21 EXEC PROC=MYPROC
                 """,
-            JclFile.builder()
+            Job.builder()
                 .name("SIMPLE2")
-                .isJob(true)
                 .steps(List.of(JclStep.builder()
                     .name("STEP21")
                     .pgm(null)
-                    .proc(ProcRef.builder().name("MYPROC").build())
+                    .proc(ProcedureRef.builder().name("MYPROC").build())
 
                     .build()))
                 .build()),
@@ -68,13 +68,12 @@ class JclFileParserTests {
                 //* Custom procedure that calls a COBOL program
                 //STEP31 EXEC PGM=MYCBL3
                 """,
-            JclFile.builder()
+            Procedure.builder()
                 .name("PROC1")
                 .steps(List.of(JclStep.builder()
                     .name("STEP31")
                     .pgm(ProgramRef.builder().name("MYCBL3").build())
                     .proc(null)
-
                     .build()))
                 .build()),
         Arguments.of(
@@ -83,12 +82,12 @@ class JclFileParserTests {
                 //* Custom procedure that calls a COBOL program
                 //STEP41 EXEC MYPROC
                 """,
-            JclFile.builder()
+            Procedure.builder()
                 .name("PROC2")
                 .steps(List.of(JclStep.builder()
                     .name("STEP41")
                     .pgm(null)
-                    .proc(ProcRef.builder().name("MYPROC").build())
+                    .proc(ProcedureRef.builder().name("MYPROC").build())
 
                     .build()))
                 .build()));
@@ -96,9 +95,9 @@ class JclFileParserTests {
 
   @ParameterizedTest
   @MethodSource("jclTestCases")
-  void shouldParseJcl(String jclContent, JclFile expectedFile) {
+  void shouldParseJcl(String jclContent, JclScript expectedFile) {
     // When
-    JclFile actualFile = jclParserService.parseJclFile(jclContent);
+    JclScript actualFile = jclParserService.parseJclFile(jclContent);
 
     // Then
     assertThat(actualFile).isEqualTo(expectedFile);
@@ -112,9 +111,8 @@ class JclFileParserTests {
                 //* PGM in first position
                 //STEP11 EXEC PGM=MYCBL1,COND=(1,LT)
                 """,
-            JclFile.builder()
+            Job.builder()
                 .name("SIMPLE1")
-                .isJob(true)
                 .steps(List.of(JclStep.builder()
                     .name("STEP11")
                     .pgm(ProgramRef.builder().name("MYCBL1").build())
@@ -127,9 +125,8 @@ class JclFileParserTests {
                 //* PGM in second position
                 //STEP11 EXEC COND=(1,LT),PGM=MYCBL1
                 """,
-            JclFile.builder()
+            Job.builder()
                 .name("SIMPLE1")
-                .isJob(true)
                 .steps(List.of(JclStep.builder()
                     .name("STEP11")
                     .pgm(ProgramRef.builder().name("MYCBL1").build())
@@ -143,9 +140,8 @@ class JclFileParserTests {
                 //STEP11 EXEC COND=(1,LT),
                 //       PGM=MYCBL1
                 """,
-            JclFile.builder()
+            Job.builder()
                 .name("SIMPLE1")
-                .isJob(true)
                 .steps(List.of(JclStep.builder()
                     .name("STEP11")
                     .pgm(ProgramRef.builder().name("MYCBL1").build())
@@ -156,9 +152,9 @@ class JclFileParserTests {
 
   @ParameterizedTest
   @MethodSource("sameJclWithParamsInDifferentOrder")
-  void shouldFindNamedParamsRegardlessOfOrder(String jclContent, JclFile expectedFile) {
+  void shouldFindNamedParamsRegardlessOfOrder(String jclContent, JclScript expectedFile) {
     // When
-    JclFile actualFile = jclParserService.parseJclFile(jclContent);
+    JclScript actualFile = jclParserService.parseJclFile(jclContent);
 
     // Then
     assertThat(actualFile).isEqualTo(expectedFile);
@@ -173,9 +169,8 @@ class JclFileParserTests {
                 //STEP11 EXEC PGM=MYPROG,PARAM1=VALUE1,PARAM2=VALUE2,
                 //       PARAM3=VALUE3
                 """,
-            JclFile.builder()
+            Job.builder()
                 .name("SIMPLE1")
-                .isJob(true)
                 .steps(List.of(JclStep.builder()
                     .name("STEP11")
                     .pgm(ProgramRef.builder().name("MYPROG").build())
@@ -193,7 +188,7 @@ class JclFileParserTests {
                 //STEP21 EXEC PGM=MYPROG,PARAM1=&PARAM1,PARAM2=VALUE2,
                 //       MBR=&MBR
                 """,
-            JclFile.builder()
+            Procedure.builder()
                 .name("SIMPLE2")
                 .steps(List.of(JclStep.builder()
                     .name("STEP21")
@@ -212,7 +207,7 @@ class JclFileParserTests {
                 //STEP21 EXEC PGM=MYPROG,VALUE1=@VALUE1@,
                 //       VALUE2='@VALUE2@'
                 """,
-            JclFile.builder()
+            Procedure.builder()
                 .name("SIMPLE2")
                 .steps(List.of(JclStep.builder()
                     .name("STEP21")
@@ -228,9 +223,9 @@ class JclFileParserTests {
 
   @ParameterizedTest
   @MethodSource("simpleJclWithVariousCombinationsOfParams")
-  void shouldStoreAllParams(String jclContent, JclFile expectedFile) {
+  void shouldStoreAllParams(String jclContent, JclScript expectedFile) {
     // When
-    JclFile actualFile = jclParserService.parseJclFile(jclContent);
+    JclScript actualFile = jclParserService.parseJclFile(jclContent);
 
     // Then
     assertThat(actualFile).isEqualTo(expectedFile);
@@ -238,18 +233,18 @@ class JclFileParserTests {
 
   @Test
   void shouldReportIsJobWhenIsJob() {
-    JclFile actualFile = jclParserService.parseJclFile("""
+    JclScript actualFile = jclParserService.parseJclFile("""
       //IMAJOB  JOB
       //STEP01  EXEC DUMMY
         """);
 
-    assertThat(actualFile.isJob()).isTrue();
+    assertThat(actualFile instanceof Job).isTrue();
 
     actualFile = jclParserService.parseJclFile("""
       //IMAJOB  PROC
       //STEP01  EXEC DUMMY
         """);
 
-    assertThat(actualFile.isJob()).isFalse();
+    assertThat(actualFile instanceof Job).isFalse();
   }
 }

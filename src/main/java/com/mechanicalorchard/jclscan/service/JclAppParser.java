@@ -10,7 +10,10 @@ import org.springframework.stereotype.Service;
 import com.mechanicalorchard.jclscan.model.AppSourceFile;
 import com.mechanicalorchard.jclscan.model.ProgramSummary;
 import com.mechanicalorchard.jclscan.model.JclApp;
-import com.mechanicalorchard.jclscan.model.JclFile;
+import com.mechanicalorchard.jclscan.model.JclScript;
+import com.mechanicalorchard.jclscan.model.Job;
+import com.mechanicalorchard.jclscan.model.Procedure;
+import com.mechanicalorchard.jclscan.model.ProcedureRef;
 
 @Service
 public class JclAppParser {
@@ -29,11 +32,12 @@ public class JclAppParser {
         String source = appSourceFile.getContent().getContentAsString(Charset.defaultCharset());
         switch(appSourceFile.getKind()) {
           case JCL:
-            JclFile jclFile = jclParserService.parseJclFile(source);
-            if (jclFile.isJob()) {
-              app.getJobs().add(jclFile);
-            } else {
-              app.getProcLib().register(appSourceFile.getName(), jclFile);
+            JclScript jclFile = jclParserService.parseJclFile(source);
+            switch (jclFile) {
+              case Job job -> app.getJobs().add(job);
+              case Procedure proc -> app.getProcLib().register(appSourceFile.getName(), proc);
+              case ProcedureRef ref -> throw new IllegalStateException(
+                  "Unexpected ProcedureRef: " + ref.getName() + " in " + appSourceFile.getName());
             }
             break;
           case COBOL:

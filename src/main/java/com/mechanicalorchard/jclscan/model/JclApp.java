@@ -4,14 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class JclApp {
-  private List<JclFile> jobs = new ArrayList<>();
-  private Library<JclProc> procLib = new Library<>();
+  private List<Job> jobs = new ArrayList<>();
+  private Library<Procedure> procLib = new Library<>();
   private Library<Program> linkLib = new Library<>();
 
-  public List<JclFile> getJobs() {
+  public List<Job> getJobs() {
     return jobs;
   }
-  public Library<JclProc> getProcLib() {
+  public Library<Procedure> getProcLib() {
     return procLib;
   }
   public Library<Program> getLinkLib() {
