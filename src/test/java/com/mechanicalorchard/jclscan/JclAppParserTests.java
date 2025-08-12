@@ -13,13 +13,13 @@ import com.mechanicalorchard.jclscan.model.ProgramSummary;
 import com.mechanicalorchard.jclscan.model.JclApp;
 import com.mechanicalorchard.jclscan.model.JclFile;
 import com.mechanicalorchard.jclscan.model.Program;
-import com.mechanicalorchard.jclscan.service.JclAppParserService;
+import com.mechanicalorchard.jclscan.service.JclAppParser;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 public class JclAppParserTests {
   @Autowired
-  JclAppParserService jclAppParserService;
+  JclAppParser jclAppParserService;
 
   private JclApp appUnderTest;
 
