@@ -11,7 +11,8 @@ import com.mechanicalorchard.jclscan.model.AppSourceFile;
 import com.mechanicalorchard.jclscan.model.AppSourceFile.Kind;
 import com.mechanicalorchard.jclscan.model.ProgramSummary;
 import com.mechanicalorchard.jclscan.model.JclApp;
-import com.mechanicalorchard.jclscan.model.JclFile;
+import com.mechanicalorchard.jclscan.model.Procedure;
+import com.mechanicalorchard.jclscan.model.Job;
 import com.mechanicalorchard.jclscan.model.Program;
 import com.mechanicalorchard.jclscan.service.JclAppParser;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -70,14 +71,14 @@ public class JclAppParserTests {
   void shouldPlaceJobsInJobsList() {
     // implicit: only JCL marked as JOBs are treated as jobs (i.e. PROCs are not jobs)
     assertThat(appUnderTest.getJobs()).hasSize(1);
-    JclFile job = appUnderTest.getJobs().get(0);
+    Job job = appUnderTest.getJobs().get(0);
     assertThat(job.getName()).isEqualTo("DAILY01");
   }
 
   @Test
   void shouldPlaceProcsInProcLib() {
     assertThat(appUnderTest.getProcLib().size()).isEqualTo(1);
-    JclFile proc = (JclFile) appUnderTest.getProcLib().resolve("DAILYDO");
+    Procedure proc = (Procedure) appUnderTest.getProcLib().resolve("DAILYDO");
 
     assertThat(proc.getSteps()).hasSize(2);
 

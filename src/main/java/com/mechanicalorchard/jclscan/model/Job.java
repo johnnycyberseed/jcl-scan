@@ -7,8 +7,7 @@ import java.util.List;
 
 @Data
 @Builder
-public final class JclFile implements JclProc {
+public final class Job implements JclScript {
     private String name;
     private List<JclStep> steps;
-    private boolean isJob;
 }

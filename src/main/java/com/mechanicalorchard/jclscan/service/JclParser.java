@@ -1,8 +1,10 @@
 package com.mechanicalorchard.jclscan.service;
 
-import com.mechanicalorchard.jclscan.model.JclFile;
+import com.mechanicalorchard.jclscan.model.Procedure;
+import com.mechanicalorchard.jclscan.model.JclScript;
+import com.mechanicalorchard.jclscan.model.Job;
 import com.mechanicalorchard.jclscan.model.JclStep;
-import com.mechanicalorchard.jclscan.model.ProcRef;
+import com.mechanicalorchard.jclscan.model.ProcedureRef;
 import com.mechanicalorchard.jclscan.model.ProgramRef;
 
 import java.util.ArrayList;
@@ -26,22 +28,27 @@ public class JclParser {
   private static final Pattern PROC_PARAM_PATTERN = Pattern.compile("\\bPROC=([A-Z0-9]+)\\b");
   private static final Pattern PARAM_PATTERN = Pattern.compile("\\b([A-Z0-9]+)=((?:\\([^)]*\\)|[^,\\s])+)");
 
-  public JclFile parseJclFile(String jclContent) {
+  public JclScript parseJclFile(String jclContent) {
     // Preprocess to handle continuation lines
     String normalizedContent = joinContinuationLines(jclContent);
 
-    boolean isJob = isJobOrProc(normalizedContent);
     String fileName = extractJobOrProcName(normalizedContent);
     List<JclStep> steps = extractSteps(normalizedContent);
 
-    return JclFile.builder()
-        .name(fileName)
-        .isJob(isJob)
-        .steps(steps)
-        .build();
+    if (isJob(normalizedContent)) {
+      return Job.builder()
+          .name(fileName)
+          .steps(steps)
+          .build();
+    } else {
+      return Procedure.builder()
+          .name(fileName)
+          .steps(steps)
+          .build();
+    }
   }
 
-  private boolean isJobOrProc(String jclContent) {
+  private boolean isJob(String jclContent) {
     Matcher matcher = JOB_PATTERN.matcher(jclContent);
     return matcher.find();
   }
@@ -73,18 +80,19 @@ public class JclParser {
 
       // Check for first positional argument (procedure name without PROC= prefix)
       String firstPositionalProc = extractFirstPositionalArgument(parameterList);
-      
+
       // Extract PGM parameter if present
       String pgmName = extractParameter(parameterList, PGM_PARAM_PATTERN);
       ProgramRef progRef = pgmName != null ? ProgramRef.builder().name(pgmName).build() : null;
 
-      // Extract PROC parameter if present (named PROC= takes precedence over positional)
+      // Extract PROC parameter if present (named PROC= takes precedence over
+      // positional)
       String procName = extractParameter(parameterList, PROC_PARAM_PATTERN);
-      ProcRef procRef = null;
+      ProcedureRef procRef = null;
       if (procName != null) {
-        procRef = ProcRef.builder().name(procName).build();
+        procRef = ProcedureRef.builder().name(procName).build();
       } else if (firstPositionalProc != null) {
-        procRef = ProcRef.builder().name(firstPositionalProc).build();
+        procRef = ProcedureRef.builder().name(firstPositionalProc).build();
       }
 
       // Extract symbolic parameters (everything except PGM and PROC)
@@ -122,17 +130,17 @@ public class JclParser {
   private Map<String, String> extractSymbolicParameters(String parameterList) {
     Map<String, String> symbolicParams = new HashMap<>();
     Matcher matcher = PARAM_PATTERN.matcher(parameterList);
-    
+
     while (matcher.find()) {
       String paramName = matcher.group(1);
       String paramValue = matcher.group(2);
-      
+
       // Skip first-class parameters (PGM, PROC, and COND)
       if (!"PGM".equals(paramName) && !"PROC".equals(paramName) && !"COND".equals(paramName)) {
         symbolicParams.put(paramName, paramValue);
       }
     }
-    
+
     return symbolicParams;
   }
 
