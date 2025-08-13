@@ -1,6 +1,7 @@
 package com.mechanicalorchard.jclscan.service;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -28,16 +29,18 @@ public class AppScanner {
   private SourceDiscoverer sourceDiscoverer;
 
   public void scan(Path programReportOutputFile) throws IOException {
-    throw new IllegalArgumentException("No inputs provided. Use scan(output, inputPaths).");
+    throw new IllegalArgumentException("No inputs provided. Use scan(outputDirectory, inputPaths).");
   }
 
-  public void scan(Path programReportOutputFile, List<Path> inputPaths) throws IOException {
+  public void scan(Path outputDirectory, List<Path> inputPaths) throws IOException {
     List<AppSourceFile> sources = sourceDiscoverer.discover(inputPaths);
     JclApp app = appParser.parse(sources);
     List<ProgramSummary> summaries = app.getLinkLib().registered().stream()
         .map(p -> (ProgramSummary) p)
         .toList();
     ProgramReport report = programReportBuilder.build(summaries);
+    Files.createDirectories(outputDirectory);
+    Path programReportOutputFile = outputDirectory.resolve("program-report.csv");
     reportWriter.writeProgramReport(programReportOutputFile, report);
   }
 }

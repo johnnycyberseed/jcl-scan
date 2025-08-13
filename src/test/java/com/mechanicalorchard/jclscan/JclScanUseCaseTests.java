@@ -23,7 +23,7 @@ class JclScanUseCaseTests {
 
   @Test
   void scan_writesProgramReportCsvToDisk(@TempDir Path tempDir) throws IOException {
-    Path outputFile = tempDir.resolve("program-report.csv");
+    Path outputDirectory = tempDir.resolve("out");
 
     // Prepare sample inputs on disk in nested directories
     Path root = tempDir.resolve("app");
@@ -67,11 +67,13 @@ class JclScanUseCaseTests {
         END REPORT
         """.strip(), StandardCharsets.UTF_8);
 
-    appScanner.scan(outputFile, List.of(root));
+    appScanner.scan(outputDirectory, List.of(root));
 
-    assertThat(Files.exists(outputFile)).isTrue();
+    Path programReportFile = outputDirectory.resolve("program-report.csv");
 
-    String content = Files.readString(outputFile, StandardCharsets.UTF_8).replace("\r\n", "\n");
+    assertThat(Files.exists(programReportFile)).isTrue();
+
+    String content = Files.readString(programReportFile, StandardCharsets.UTF_8).replace("\r\n", "\n");
 
     String expected = String.join("\n",
         "File Name,Program Name,Program Type,Lines of Code,Number of conditionals,Number of routines",
