@@ -7,14 +7,18 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 
 import com.mechanicalorchard.jclscan.model.AppSourceFile;
 
+@Slf4j
 @Service
 public class SourceDiscoverer {
 
   public List<AppSourceFile> discover(List<Path> paths) throws IOException {
+    log.info("Discovering sources in {}", paths);
     List<AppSourceFile> discovered = new ArrayList<>();
     for (Path path : paths) {
       if (Files.isDirectory(path)) {

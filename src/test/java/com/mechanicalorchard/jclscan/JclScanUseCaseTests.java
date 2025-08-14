@@ -80,15 +80,15 @@ class JclScanUseCaseTests {
         "");
     assertThat(content).isEqualTo(expected);
 
-    // Path executionReportFile = outputDirectory.resolve("execution-report.csv");
+    Path executionReportFile = outputDirectory.resolve("execution-report.csv");
 
-    // assertThat(Files.exists(executionReportFile)).isTrue();
-    // content = Files.readString(executionReportFile, StandardCharsets.UTF_8);
-    // expected = String.join("\n",
-    //     "Job,Step,Procedure,Program,Program Type,Lines of Code",
-    //     "DAILY01,STEP01.DOTHING,(program),PAYROLL1,COBOL,4",
-    //     "DAILY01,STEP01.RPTTHING,(program),EZT1,EASYTRIEVE,5",
-    //     "");
-    // assertThat(content).isEqualTo(expected);
+    assertThat(Files.exists(executionReportFile)).isTrue();
+    content = Files.readString(executionReportFile, StandardCharsets.UTF_8);
+    expected = String.join("\n",
+        "Job,Step,Procedure,Program,Program Type,Lines of Code",
+        "DAILY01,STEP01.DOTHING,(program),PAYROLL1,COBOL,4",
+        "DAILY01,STEP01.RPTTHING,(program),EZT1,EASYTRIEVE,5",
+        "");
+    assertThat(content).isEqualTo(expected);
   }
 }

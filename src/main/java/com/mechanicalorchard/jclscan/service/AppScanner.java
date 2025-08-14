@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.mechanicalorchard.jclscan.model.AppSourceFile;
+import com.mechanicalorchard.jclscan.model.ExecutionReport;
 import com.mechanicalorchard.jclscan.model.JclApp;
 import com.mechanicalorchard.jclscan.model.ProgramReport;
 import com.mechanicalorchard.jclscan.model.ProgramSummary;
@@ -23,7 +24,13 @@ public class AppScanner {
   private ProgramReportBuilder programReportBuilder;
 
   @Autowired
+  private ExecutionReportBuilder executionReportBuilder;
+
+  @Autowired
   private AppParser appParser;
+
+  @Autowired
+  private Linker linker;
 
   @Autowired
   private SourceDiscoverer sourceDiscoverer;
@@ -35,12 +42,16 @@ public class AppScanner {
   public void scan(Path outputDirectory, List<Path> inputPaths) throws IOException {
     List<AppSourceFile> sources = sourceDiscoverer.discover(inputPaths);
     JclApp app = appParser.parse(sources);
+    linker.link(app);
     List<ProgramSummary> summaries = app.getLinkLib().registered().stream()
         .map(p -> (ProgramSummary) p)
         .toList();
-    ProgramReport report = programReportBuilder.build(summaries);
+    ExecutionReport executionReport = executionReportBuilder.build(app);
+    ProgramReport programReport = programReportBuilder.build(summaries);
     Files.createDirectories(outputDirectory);
     Path programReportOutputFile = outputDirectory.resolve("program-report.csv");
-    reportWriter.writeProgramReport(programReportOutputFile, report);
+    Path executionReportOutputFile = outputDirectory.resolve("execution-report.csv");
+    reportWriter.writeProgramReport(programReportOutputFile, programReport);
+    reportWriter.writeExecutionReport(executionReportOutputFile, executionReport);
   }
 }
