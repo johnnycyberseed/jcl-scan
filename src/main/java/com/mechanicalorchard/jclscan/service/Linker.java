@@ -11,36 +11,50 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class Linker {
 
   public void link(JclApp app) {
+    log.info("JCL app has {} job(s), {} procedure(s), and {} program(s)",
+        app.getJobs().size(),
+        app.getProcLib().registered().size(),
+        app.getLinkLib().registered().size());
     for (Job job : app.getJobs()) {
-      resolveSteps(app, job.getSteps());
+      log.debug("Processing job {}", job.getName());
+      resolveSteps(app, job.getName(), job.getSteps());
     }
   }
 
-  private void resolveSteps(JclApp app, List<JclStep> steps) {
+  private void resolveSteps(JclApp app, String jobName, List<JclStep> steps) {
     for (JclStep step : steps) {
+      log.debug("Processing step {}.{}", jobName, step.getName());
       if (step.getProc() instanceof ProcedureRef procRef) {
+        log.trace("Resolving procedure reference \"{}\"", procRef.getName());
         Procedure resolved = app.getProcLib().resolve(procRef.getName());
         if (resolved != null) {
+          log.trace("Resolved \"{}\" to {}", procRef.getName(), resolved);
           step.setProc(resolved);
-          // Resolve nested steps inside the resolved procedure
           if (resolved.getSteps() != null) {
-            resolveSteps(app, resolved.getSteps());
+            String stepPrefix = jobName + "." + step.getName();
+            resolveSteps(app, stepPrefix, resolved.getSteps());
           }
+        } else {
+          log.warn("Unresolved procedure reference \"{}\"", procRef.getName());
         }
       }
 
       if (step.getPgm() instanceof ProgramRef progRef) {
         Program resolved = app.getLinkLib().resolve(progRef.getName());
         if (resolved != null) {
+          log.trace("Resolved \"{}\" to {}", progRef.getName(), resolved);
           step.setPgm(resolved);
+        } else {
+          log.warn("Unresolved program reference \"{}\"", progRef.getName());
         }
       }
     }
   }
 }
-
-

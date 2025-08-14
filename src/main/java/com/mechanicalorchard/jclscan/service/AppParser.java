@@ -15,6 +15,9 @@ import com.mechanicalorchard.jclscan.model.Job;
 import com.mechanicalorchard.jclscan.model.Procedure;
 import com.mechanicalorchard.jclscan.model.ProcedureRef;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class AppParser {
   @Autowired
@@ -25,6 +28,7 @@ public class AppParser {
   private EasytrieveAnalyzer easytrieveAnalyzer;
 
   public JclApp parse(List<AppSourceFile> appSourceFiles) {
+    log.info("Parsing {} source files", appSourceFiles.size());
     JclApp app = new JclApp();
     
     for (AppSourceFile appSourceFile : appSourceFiles) {
@@ -35,18 +39,18 @@ public class AppParser {
             JclScript jclFile = jclParser.parseJclFile(source);
             switch (jclFile) {
               case Job job -> app.getJobs().add(job);
-              case Procedure proc -> app.getProcLib().register(appSourceFile.getName(), proc);
+              case Procedure proc -> app.getProcLib().register(proc.getName(), proc);
               case ProcedureRef ref -> throw new IllegalStateException(
                   "Unexpected ProcedureRef: " + ref.getName() + " in " + appSourceFile.getName());
             }
             break;
           case COBOL:
             ProgramSummary cobolFile = cobolAnalyzer.analyze(appSourceFile.getName(), source);
-            app.getLinkLib().register(appSourceFile.getName(), cobolFile);
+            app.getLinkLib().register(baseName(appSourceFile.getName()), cobolFile);
             break;
           case EASYTRIEVE:
             ProgramSummary easytrieveFile = easytrieveAnalyzer.analyze(appSourceFile.getName(), source);
-            app.getLinkLib().register(appSourceFile.getName(), easytrieveFile);
+            app.getLinkLib().register(baseName(appSourceFile.getName()), easytrieveFile);
             break;
           default:
             break;
@@ -57,5 +61,10 @@ public class AppParser {
     }
 
     return app;
+  }
+
+  private String baseName(String fileName) {
+    int dot = fileName.lastIndexOf('.');
+    return dot > 0 ? fileName.substring(0, dot) : fileName;
   }
 }

@@ -9,6 +9,8 @@ import java.nio.file.Path;
 import org.springframework.stereotype.Component;
 
 import com.mechanicalorchard.jclscan.model.ProgramReport;
+import com.mechanicalorchard.jclscan.model.ExecutionReport;
+import com.mechanicalorchard.jclscan.model.ExecutionRecord;
 import com.mechanicalorchard.jclscan.model.ProgramSummary;
 
 @Component
@@ -26,6 +28,23 @@ public class CsvReportWriter implements ReportWriter {
                         Integer.toString(row.getLinesOfCode()),
                         Integer.toString(row.getNumberOfConditionals()),
                         Integer.toString(row.getNumberOfRoutines())));
+                writer.write("\n");
+            }
+        }
+    }
+
+    @Override
+    public void writeExecutionReport(Path outputFile, ExecutionReport report) throws IOException {
+        try (BufferedWriter writer = Files.newBufferedWriter(outputFile, StandardCharsets.UTF_8)) {
+            writer.write("Job,Step,Procedure,Program,Program Type,Lines of Code\n");
+            for (ExecutionRecord row : report.getExecutions()) {
+                writer.write(String.join(",",
+                        escape(row.getJobName()),
+                        escape(row.getStepName()),
+                        escape(row.getProcedureName()),
+                        escape(row.getProgramName()),
+                        escape(row.getProgramKind().name()),
+                        Integer.toString(row.getLinesOfCode())));
                 writer.write("\n");
             }
         }
