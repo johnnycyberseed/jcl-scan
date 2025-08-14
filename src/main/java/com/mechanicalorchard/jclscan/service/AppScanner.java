@@ -41,13 +41,16 @@ public class AppScanner {
 
   public void scan(Path outputDirectory, List<Path> inputPaths) throws IOException {
     List<AppSourceFile> sources = sourceDiscoverer.discover(inputPaths);
+
     JclApp app = appParser.parse(sources);
     linker.link(app);
+
     List<ProgramSummary> summaries = app.getLinkLib().registered().stream()
         .map(p -> (ProgramSummary) p)
         .toList();
-    ExecutionReport executionReport = executionReportBuilder.build(app);
     ProgramReport programReport = programReportBuilder.build(summaries);
+    ExecutionReport executionReport = executionReportBuilder.build(app);
+
     Files.createDirectories(outputDirectory);
     Path programReportOutputFile = outputDirectory.resolve("program-report.csv");
     Path executionReportOutputFile = outputDirectory.resolve("execution-report.csv");
