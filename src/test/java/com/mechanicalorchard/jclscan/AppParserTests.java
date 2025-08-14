@@ -44,7 +44,7 @@ public class AppParserTests {
             """),
         new AppSourceFile("REPORT01", Kind.EASYTRIEVE, """
             JOB INPUT
-            REPORT REPORT01
+            REPORT TEST-REPORT
 
               TITLE 'REPORT01'
               LINE 01 'Test line'

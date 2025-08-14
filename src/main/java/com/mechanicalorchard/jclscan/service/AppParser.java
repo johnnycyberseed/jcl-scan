@@ -34,23 +34,32 @@ public class AppParser {
     for (AppSourceFile appSourceFile : appSourceFiles) {
       try {
         String source = appSourceFile.getContent().getContentAsString(Charset.defaultCharset());
+        String libMemberName;
         switch(appSourceFile.getKind()) {
           case JCL:
             JclScript jclFile = jclParser.parseJclFile(source);
             switch (jclFile) {
               case Job job -> app.getJobs().add(job);
-              case Procedure proc -> app.getProcLib().register(proc.getName(), proc);
+              case Procedure proc -> {
+                libMemberName = baseName(appSourceFile.getName());
+                app.getProcLib().register(libMemberName, proc);
+                log.trace("Registered procedure \"{}\" to \"{}\" in PROC library", proc.getName(), libMemberName);
+              }
               case ProcedureRef ref -> throw new IllegalStateException(
                   "Unexpected ProcedureRef: " + ref.getName() + " in " + appSourceFile.getName());
             }
             break;
           case COBOL:
-            ProgramSummary cobolFile = cobolAnalyzer.analyze(appSourceFile.getName(), source);
-            app.getLinkLib().register(baseName(appSourceFile.getName()), cobolFile);
+            ProgramSummary cobolSummary = cobolAnalyzer.analyze(appSourceFile.getName(), source);
+            libMemberName = baseName(appSourceFile.getName());
+            app.getLinkLib().register(libMemberName, cobolSummary);
+            log.trace("Registered COBOL program \"{}\" to \"{}\" in LINK library", cobolSummary.getName(), libMemberName);
             break;
           case EASYTRIEVE:
-            ProgramSummary easytrieveFile = easytrieveAnalyzer.analyze(appSourceFile.getName(), source);
-            app.getLinkLib().register(baseName(appSourceFile.getName()), easytrieveFile);
+            ProgramSummary easytrieveSummary = easytrieveAnalyzer.analyze(appSourceFile.getName(), source);
+            libMemberName = baseName(appSourceFile.getName());
+            app.getLinkLib().register(libMemberName, easytrieveSummary);
+            log.trace("Registered Easytrieve program \"{}\" to \"{}\" in LINK library", easytrieveSummary.getName(), libMemberName);
             break;
           default:
             break;

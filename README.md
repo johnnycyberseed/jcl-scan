@@ -34,14 +34,14 @@ where:
 This tool assumes a lot about the design of the JCL application.
 
 ### JCL
+- assumes procedures are registered to members using the same name as the PROC symbolic name.
 - does not respect `IF` directives in JCL scripts
 - does not include the execution of user-authored programs when invoked indirectly by procedures (e.g. `DLIBATCH`).
-- assumes that procedures are registered to members using the same name as the PROC symbolic name.
 
 ### Programs
 - only recognizes COBOL and Easytrieve programs.
-- assumes that programs are compiled to a program object / load module of the same name as the program id.
-  (i.e. the program's logical identifer). \
+- assumes that programs are compiled to a program object / load module of the same name as source member name
+  (i.e. the source file within a SRCELIB). \
   _(see https://www.ibm.com/docs/en/zos/2.5.0?topic=introduction-zos-program-management-components)_
 
 ## Troubleshooting
