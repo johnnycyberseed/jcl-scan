@@ -13,6 +13,9 @@ import com.mechanicalorchard.jclscan.model.ExecutionReport;
 import com.mechanicalorchard.jclscan.model.ExecutionRecord;
 import com.mechanicalorchard.jclscan.model.ProgramSummary;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Component
 public class CsvReportWriter implements ReportWriter {
 
@@ -30,6 +33,7 @@ public class CsvReportWriter implements ReportWriter {
                         Integer.toString(row.getNumberOfRoutines())));
                 writer.write("\n");
             }
+            log.info("Wrote program report to {}", outputFile);
         }
     }
 
@@ -47,6 +51,7 @@ public class CsvReportWriter implements ReportWriter {
                         Integer.toString(row.getLinesOfCode())));
                 writer.write("\n");
             }
+            log.info("Wrote execution report to {}", outputFile);
         }
     }
 
