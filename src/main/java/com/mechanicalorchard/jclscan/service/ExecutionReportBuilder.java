@@ -43,11 +43,16 @@ public class ExecutionReportBuilder {
             .jobName(jobName)
             .stepName(stepPath)
             .procedureName("(program)")
-            .programName(summary.getProgramName())
+            .programName(baseName(summary.getFileName()))
             .programKind(summary.getKind())
             .linesOfCode(summary.getLinesOfCode())
             .build());
       }
     }
+  }
+
+  private String baseName(String fileName) {
+    int dot = fileName.lastIndexOf('.');
+    return dot > 0 ? fileName.substring(0, dot) : fileName;
   }
 }

@@ -26,7 +26,7 @@ public class CsvReportWriter implements ReportWriter {
             for (ProgramSummary row : report.getRows()) {
                 writer.write(String.join(",",
                         escape(row.getFileName()),
-                        escape(row.getProgramName()),
+                        escape(baseName(row.getFileName())),
                         escape(row.getKind().getLabel()),
                         Integer.toString(row.getLinesOfCode()),
                         Integer.toString(row.getNumberOfConditionals()),
@@ -62,6 +62,11 @@ public class CsvReportWriter implements ReportWriter {
         boolean needsQuotes = value.contains(",") || value.contains("\n") || value.contains("\"");
         String escaped = value.replace("\"", "\"\"");
         return needsQuotes ? "\"" + escaped + "\"" : escaped;
+    }
+
+    private String baseName(String fileName) {
+        int dot = fileName.lastIndexOf('.');
+        return dot > 0 ? fileName.substring(0, dot) : fileName;
     }
 }
 
