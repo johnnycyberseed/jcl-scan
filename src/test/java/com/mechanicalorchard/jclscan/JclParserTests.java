@@ -247,4 +247,22 @@ class JclParserTests {
 
     assertThat(actualFile instanceof Job).isFalse();
   }
+
+  @Test
+  void shouldAllowTemplatePlaceholdersInSymbolicNames() {
+    // some JCL is templated; accommodate that
+    JclScript actualFile = jclParser.parseJclFile("""
+      //@USER@JB JOB (ACCT),MSGCLASS=H,NOTIFY=&SYSUID
+      //STEP11 EXEC DUMMY
+        """);
+
+    assertThat(actualFile.getName()).isEqualTo("@USER@JB");
+
+    actualFile = jclParser.parseJclFile("""
+      //@BATCH@JB  PROC
+      //STEP01  EXEC DUMMY
+        """);
+
+    assertThat(actualFile.getName()).isEqualTo("@BATCH@JB");
+  }
 }

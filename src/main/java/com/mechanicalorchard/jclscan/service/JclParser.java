@@ -19,9 +19,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class JclParser {
 
-  private static final Pattern JOB_PATTERN = Pattern.compile("^//([A-Z0-9]+)\\s+JOB\\s+.*",
+  private static final Pattern JOB_PATTERN = Pattern.compile("^//([A-Z0-9@]+)\\s+JOB\\s+.*",
       Pattern.MULTILINE);
-  private static final Pattern PROC_PATTERN = Pattern.compile("^//([A-Z0-9]+)\\s+PROC\\s*.*",
+  private static final Pattern PROC_PATTERN = Pattern.compile("^//([A-Z0-9@]+)\\s+PROC\\s*.*",
       Pattern.MULTILINE);
   private static final Pattern STEP_PATTERN = Pattern.compile("^//([A-Z0-9]+)\\s+EXEC\\s+(.*)$", Pattern.MULTILINE);
   private static final Pattern PGM_PARAM_PATTERN = Pattern.compile("\\bPGM=([A-Z0-9]+)\\b");
