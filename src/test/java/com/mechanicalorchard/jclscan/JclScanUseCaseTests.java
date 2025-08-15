@@ -59,7 +59,7 @@ class JclScanUseCaseTests {
 
     Files.writeString(ezt, """
         JOB INPUT
-        REPORT EZT1
+        REPORT REPORT01
 
           TITLE 'EZT1'
           LINE 01 'Test line'
