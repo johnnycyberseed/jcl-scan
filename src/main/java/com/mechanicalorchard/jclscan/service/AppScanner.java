@@ -30,7 +30,7 @@ public class AppScanner {
   private AppParser appParser;
 
   @Autowired
-  private Linker linker;
+  private Resolver resolver;
 
   @Autowired
   private SourceDiscoverer sourceDiscoverer;
@@ -43,7 +43,7 @@ public class AppScanner {
     List<AppSourceFile> sources = sourceDiscoverer.discover(inputPaths);
 
     JclApp app = appParser.parse(sources);
-    linker.link(app);
+    resolver.resolve(app);
 
     List<ProgramSummary> summaries = app.getLinkLib().registered().stream()
         .map(p -> (ProgramSummary) p)

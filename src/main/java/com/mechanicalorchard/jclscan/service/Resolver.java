@@ -15,9 +15,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-public class Linker {
+public class Resolver {
 
-  public void link(JclApp app) {
+  public void resolve(JclApp app) {
     log.info("JCL app has {} job(s), {} procedure(s), and {} program(s)",
         app.getJobs().size(),
         app.getProcLib().registered().size(),

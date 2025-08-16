@@ -1,25 +1,24 @@
 package com.mechanicalorchard.jclscan;
 
 import com.mechanicalorchard.jclscan.model.*;
-import com.mechanicalorchard.jclscan.service.Linker;
+import com.mechanicalorchard.jclscan.service.Resolver;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
-import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-class LinkerResolutionTests {
+class ResolverTests {
 
   @Autowired
-  private Linker linker;
+  private Resolver resolver;
 
   @SuppressWarnings("null")
   @Test
-  void link_resolvesProcedureAndProgramReferencesInPlace() {
+  void resolve_resolvesProcedureAndProgramReferencesInPlace() {
     // Build JclApp with one job, one procedure, and two programs
     JclApp app = new JclApp();
 
@@ -62,7 +61,7 @@ class LinkerResolutionTests {
     app.getJobs().add(job);
 
     // When
-    linker.link(app);
+    resolver.resolve(app);
 
     // Then: the job's step should now reference a resolved Procedure, not a ProcedureRef
     JclStep step01 = app.getJobs().get(0).getSteps().get(0);
