@@ -51,7 +51,7 @@ class JclParserTests {
                 //SIMPLE2 JOB (ACCT),MSGCLASS=H,NOTIFY=&SYSUID
                 //* Simple job that calls a custom procedure
                 //* During parsing, we place a reference; presumably we'll resolve it later.
-                //STEP21 EXEC PROC=MYPROC
+                //STEP21 EXEC PROC=MYPROC,MBR=MYPROG
                 """,
             Job.builder()
                 .name("SIMPLE2")
@@ -59,22 +59,35 @@ class JclParserTests {
                     .name("STEP21")
                     .pgm(null)
                     .proc(ProcedureRef.builder().name("MYPROC").build())
-
+                    .symbolicParameters(Map.of(
+                        "MBR", "MYPROG"))
                     .build()))
                 .build()),
         Arguments.of(
             """
-                //PROC1  PROC
-                //* Custom procedure that calls a COBOL program
-                //STEP31 EXEC PGM=MYCBL3
+                //PROC1  PROC,MBR=MYPROG
+                //* Custom procedure that invokes a program named in a symbolic parameter
+                //* ... a second EXEC is present to ensure parameters are kept with their step
+                //STEP31 EXEC PGM=&MBR,CALLER=PROC1
+                //STEP32 EXEC PGM=ALWAYSDO,MSG="Hello, world!"
                 """,
             Procedure.builder()
                 .name("PROC1")
-                .steps(List.of(JclStep.builder()
-                    .name("STEP31")
-                    .pgm(ProgramRef.builder().name("MYCBL3").build())
-                    .proc(null)
-                    .build()))
+                .symbolicParameterDefaults(Map.of(
+                    "MBR", "MYPROG"))
+                .steps(List.of(
+                    JclStep.builder()
+                        .name("STEP31")
+                        .pgm(ProgramRef.builder().name("&MBR").build())
+                        .symbolicParameters(Map.of(
+                            "CALLER", "PROC1"))
+                        .build(),
+                    JclStep.builder()
+                        .name("STEP32")
+                        .pgm(ProgramRef.builder().name("ALWAYSDO").build())
+                        .symbolicParameters(Map.of(
+                            "MSG", "Hello, world!"))
+                        .build()))
                 .build()),
         Arguments.of(
             """
@@ -177,7 +190,7 @@ class JclParserTests {
                     .proc(null)
                     .symbolicParameters(Map.of(
                         "PARAM1", "VALUE1",
-                        "PARAM2", "VALUE2", 
+                        "PARAM2", "VALUE2",
                         "PARAM3", "VALUE3"))
                     .build()))
                 .build()),
@@ -196,7 +209,7 @@ class JclParserTests {
                     .proc(null)
                     .symbolicParameters(Map.of(
                         "PARAM1", "&PARAM1",
-                        "PARAM2", "VALUE2", 
+                        "PARAM2", "VALUE2",
                         "MBR", "&MBR"))
                     .build()))
                 .build()),
@@ -217,8 +230,7 @@ class JclParserTests {
                         "VALUE1", "@VALUE1@",
                         "VALUE2", "'@VALUE2@'"))
                     .build()))
-                .build())
-                );
+                .build()));
   }
 
   @ParameterizedTest
@@ -234,16 +246,16 @@ class JclParserTests {
   @Test
   void shouldReportIsJobWhenIsJob() {
     JclScript actualFile = jclParser.parseJclFile("""
-      //IMAJOB  JOB
-      //STEP01  EXEC DUMMY
-        """);
+        //IMAJOB  JOB
+        //STEP01  EXEC DUMMY
+          """);
 
     assertThat(actualFile instanceof Job).isTrue();
 
     actualFile = jclParser.parseJclFile("""
-      //IMAJOB  PROC
-      //STEP01  EXEC DUMMY
-        """);
+        //IMAJOB  PROC
+        //STEP01  EXEC DUMMY
+          """);
 
     assertThat(actualFile instanceof Job).isFalse();
   }
@@ -252,16 +264,16 @@ class JclParserTests {
   void shouldAllowTemplatePlaceholdersInSymbolicNames() {
     // some JCL is templated; accommodate that
     JclScript actualFile = jclParser.parseJclFile("""
-      //@USER@JB JOB (ACCT),MSGCLASS=H,NOTIFY=&SYSUID
-      //STEP11 EXEC DUMMY
-        """);
+        //@USER@JB JOB (ACCT)
+        //STEP11 EXEC DUMMY
+          """);
 
     assertThat(actualFile.getName()).isEqualTo("@USER@JB");
 
     actualFile = jclParser.parseJclFile("""
-      //@BATCH@JB  PROC
-      //STEP01  EXEC DUMMY
-        """);
+        //@BATCH@JB  PROC
+        //STEP01  EXEC DUMMY
+          """);
 
     assertThat(actualFile.getName()).isEqualTo("@BATCH@JB");
   }

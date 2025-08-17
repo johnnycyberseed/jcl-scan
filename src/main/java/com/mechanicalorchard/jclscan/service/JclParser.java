@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,10 +24,12 @@ public class JclParser {
       Pattern.MULTILINE);
   private static final Pattern PROC_PATTERN = Pattern.compile("^//([A-Z0-9@]+)\\s+PROC\\s*.*",
       Pattern.MULTILINE);
+  private static final Pattern PROC_STATEMENT_PATTERN = Pattern.compile("^//[A-Z0-9@]+\\s+PROC\\s*(.*)$",
+      Pattern.MULTILINE);
   private static final Pattern STEP_PATTERN = Pattern.compile("^//([A-Z0-9]+)\\s+EXEC\\s+(.*)$", Pattern.MULTILINE);
-  private static final Pattern PGM_PARAM_PATTERN = Pattern.compile("\\bPGM=([A-Z0-9]+)\\b");
-  private static final Pattern PROC_PARAM_PATTERN = Pattern.compile("\\bPROC=([A-Z0-9]+)\\b");
-  private static final Pattern PARAM_PATTERN = Pattern.compile("\\b([A-Z0-9]+)=((?:\\([^)]*\\)|[^,\\s])+)");
+
+  // JCL first-class/keyword parameters that should not be captured as symbolic parameters
+  private static final Set<String> EXEC_KEYWORD_PARAMETERS = Set.of("PGM", "PROC", "COND");
 
   public JclScript parseJclFile(String jclContent) {
     // Preprocess to handle continuation lines
@@ -41,8 +44,10 @@ public class JclParser {
           .steps(steps)
           .build();
     } else {
+      Map<String, String> procDefaults = extractProcedureDefaults(normalizedContent);
       return Procedure.builder()
           .name(fileName)
+          .symbolicParameterDefaults(procDefaults)
           .steps(steps)
           .build();
     }
@@ -78,16 +83,21 @@ public class JclParser {
       String stepName = matcher.group(1);
       String parameterList = matcher.group(2); // All parameters after EXEC
 
-      // Check for first positional argument (procedure name without PROC= prefix)
-      String firstPositionalProc = extractFirstPositionalArgument(parameterList);
+      List<String> tokens;
+      try {
+        tokens = splitTopLevelParameters(parameterList);
+      } catch (IllegalArgumentException e) {
+        throw new IllegalArgumentException("While parsing step " + stepName + " in \n```jcl\n" + jclContent + "```", e);
+      }
 
-      // Extract PGM parameter if present
-      String pgmName = extractParameter(parameterList, PGM_PARAM_PATTERN);
+      // First positional argument: procedure name (if present and not name=value)
+      String firstPositionalProc = extractFirstPositionalArgument(tokens);
+
+      // Extract named parameters
+      String pgmName = extractNamedParameterValue(tokens, "PGM");
       ProgramRef progRef = pgmName != null ? ProgramRef.builder().name(pgmName).build() : null;
 
-      // Extract PROC parameter if present (named PROC= takes precedence over
-      // positional)
-      String procName = extractParameter(parameterList, PROC_PARAM_PATTERN);
+      String procName = extractNamedParameterValue(tokens, "PROC");
       ProcedureRef procRef = null;
       if (procName != null) {
         procRef = ProcedureRef.builder().name(procName).build();
@@ -96,7 +106,7 @@ public class JclParser {
       }
 
       // Extract symbolic parameters (everything except PGM and PROC)
-      Map<String, String> symbolicParams = extractSymbolicParameters(parameterList);
+      Map<String, String> symbolicParams = extractSymbolicParameters(tokens);
 
       steps.add(JclStep.builder()
           .name(stepName)
@@ -109,39 +119,144 @@ public class JclParser {
     return steps;
   }
 
-  private String extractParameter(String parameterList, Pattern paramPattern) {
-    Matcher paramMatcher = paramPattern.matcher(parameterList);
-    return paramMatcher.find() ? paramMatcher.group(1) : null;
-  }
-
-  private String extractFirstPositionalArgument(String parameterList) {
-    // Split by comma and get the first parameter
-    String[] parameters = parameterList.trim().split(",");
-    if (parameters.length > 0) {
-      String firstParam = parameters[0].trim();
-      // If the first parameter doesn't contain '=', it's a positional argument
-      if (!firstParam.contains("=") && firstParam.matches("[A-Z0-9]+")) {
-        return firstParam;
+  private String extractNamedParameterValue(List<String> tokens, String name) {
+    String prefix = name + "=";
+    for (String token : tokens) {
+      String trimmed = token.trim();
+      if (trimmed.regionMatches(true, 0, prefix, 0, prefix.length())) {
+        String value = trimmed.substring(prefix.length()).trim();
+        return normalizeValue(value);
       }
     }
     return null;
   }
 
-  private Map<String, String> extractSymbolicParameters(String parameterList) {
+  private String extractFirstPositionalArgument(List<String> tokens) {
+    for (String token : tokens) {
+      String trimmed = token.trim();
+      if (!trimmed.contains("=")) {
+        // Positional PROC name is unadorned token
+        if (trimmed.matches("[A-Z0-9@&_.$#-]+")) {
+          return trimmed;
+        }
+      }
+      // If first token is name=value, there is no positional argument
+      break;
+    }
+    return null;
+  }
+
+  private Map<String, String> extractSymbolicParameters(List<String> tokens) {
     Map<String, String> symbolicParams = new HashMap<>();
-    Matcher matcher = PARAM_PATTERN.matcher(parameterList);
+    for (String token : tokens) {
+      String trimmed = token.trim();
+      int eq = trimmed.indexOf('=');
+      if (eq <= 0) {
+        continue; // positional or malformed
+      }
+      String paramName = trimmed.substring(0, eq).trim();
+      String rawValue = trimmed.substring(eq + 1).trim();
 
-    while (matcher.find()) {
-      String paramName = matcher.group(1);
-      String paramValue = matcher.group(2);
+      // Skip first-class parameters by membership
+      if (EXEC_KEYWORD_PARAMETERS.contains(paramName.toUpperCase())) {
+        continue;
+      }
 
-      // Skip first-class parameters (PGM, PROC, and COND)
-      if (!"PGM".equals(paramName) && !"PROC".equals(paramName) && !"COND".equals(paramName)) {
-        symbolicParams.put(paramName, paramValue);
+      symbolicParams.put(paramName, normalizeValue(rawValue));
+    }
+    return symbolicParams;
+  }
+
+  private String normalizeValue(String value) {
+    if (value.length() >= 2) {
+      char first = value.charAt(0);
+      char last = value.charAt(value.length() - 1);
+      // Strip surrounding double quotes only; keep single quotes literal
+      if (first == '"' && last == '"') {
+        return value.substring(1, value.length() - 1);
       }
     }
+    return value;
+  }
 
-    return symbolicParams;
+  private List<String> splitTopLevelParameters(String parameterList) {
+    List<String> tokens = new ArrayList<>();
+    StringBuilder currToken = new StringBuilder();
+    int parenDepth = 0;
+    char inQuote = '\0'; // either the kind of quote we're in, or '\0' if we're not in a quoted string
+
+    for (char c : parameterList.toCharArray()) {
+      TokenizeAction action = (inQuote != '\0') ? TokenizeAction.INSIDE_QUOTE
+          : switch (c) {
+            case '\'', '"' -> TokenizeAction.ENTER_QUOTE;
+            case '(' -> TokenizeAction.OPEN_PAREN;
+            case ')' -> TokenizeAction.CLOSE_PAREN;
+            case ',' -> (parenDepth == 0) ? TokenizeAction.COMMA_AT_TOP : TokenizeAction.APPEND_CHAR;
+            default -> TokenizeAction.APPEND_CHAR;
+          };
+
+      switch (action) {
+        case INSIDE_QUOTE -> {
+          if (c == inQuote) {
+            inQuote = '\0';
+          }
+          currToken.append(c);
+        }
+        case ENTER_QUOTE -> {
+          inQuote = c;
+          currToken.append(c);
+        }
+        case OPEN_PAREN -> {
+          parenDepth++;
+          currToken.append(c);
+        }
+        case CLOSE_PAREN -> {
+          parenDepth--;
+          if (parenDepth < 0) {
+            throw new IllegalArgumentException(
+                "Unbalanced parentheses (too many closing?) in parameter list: «" + parameterList + "»");
+          }
+          currToken.append(c);
+        }
+        case COMMA_AT_TOP -> {
+          tokens.add(currToken.toString());
+          currToken.setLength(0);
+        }
+        case APPEND_CHAR -> {
+          currToken.append(c);
+          // no state change needed beyond appending the character
+        }
+      }
+    }
+    if (currToken.length() > 0) {
+      tokens.add(currToken.toString());
+    }
+    if (parenDepth > 0) {
+      throw new IllegalArgumentException(
+          "Unbalanced parentheses (not enough closing?) in parameter list: «" + parameterList + "»");
+    }
+    return tokens;
+  }
+
+  private enum TokenizeAction {
+    INSIDE_QUOTE, ENTER_QUOTE, OPEN_PAREN, CLOSE_PAREN, COMMA_AT_TOP, APPEND_CHAR
+  }
+
+  private Map<String, String> extractProcedureDefaults(String jclContent) {
+    Map<String, String> defaults = new HashMap<>();
+    Matcher matcher = PROC_STATEMENT_PATTERN.matcher(jclContent);
+    if (matcher.find()) {
+      String parameterList = matcher.group(1);
+      if (parameterList != null && !parameterList.isBlank()) {
+        defaults.putAll(extractSymbolicParametersFromString(parameterList));
+      }
+    }
+    return defaults;
+  }
+
+  private Map<String, String> extractSymbolicParametersFromString(String parameterList) {
+    List<String> tokens = splitTopLevelParameters(parameterList);
+    return extractSymbolicParameters(tokens);
   }
 
   private String joinContinuationLines(String jclContent) {

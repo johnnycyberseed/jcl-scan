@@ -37,6 +37,7 @@ This tool assumes a lot about the design of the JCL application.
 - assumes procedures are registered to members using the same name as the PROC symbolic name.
 - does not respect `IF` directives in JCL scripts
 - does not include the execution of user-authored programs when invoked indirectly by procedures (e.g. `DLIBATCH`).
+- recognizes only cataloged procedures (instream procedures not yet supported).
 
 ### Programs
 - only recognizes COBOL and Easytrieve programs.

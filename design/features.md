@@ -58,6 +58,25 @@ Flags:
 - `--file-type <glob:type>`
 - `<type>` ::= `cobol` | `easytrieve` | `assembler` | `detect`
 
+### Passing arguments to procedures
+
+- Arguments are passed into JCL procedures as symbolic parameters:
+  ```
+  //STEP11 EXEC MYPROC,MBR=MYPROG,PARAM1=VALUE1,PARAM2=VALUE2
+  ```
+- Those parameters are consumed by the procedure via the `&<param-name>` syntax:
+  ```jcl
+  //MYPROC PROC MBR=,PARM1=,PARM2=
+  //       EXEC PGM=&MBR,PARM1=&PARM1,PARM2=&PARM2
+  ```
+  "evaluates" to:
+  ```jcl
+  //MYPROC PROC MBR=,PARM1=,PARM2=
+  //       EXEC PGM=MYPROG,PARM1=VALUE1,PARM2=VALUE2
+  ```
+
+
+
 ## Specifying Output Files
 
 Dimensions:
@@ -68,6 +87,13 @@ Flags:
 - `--output-path <path-to-dir>`
 - `--output-format <format>`
   - `<format>` ::= `csv` (default) | `json`
+
+## System Libraries of procedures
+
+There are a set of system catalogued procedures that are commonly used in JCL "apps" that specifically execute user-supplied programs.
+The JCL Scanner includes an additional library of such procedures.
+When linked in, such procedures also resolve to the program that they execute.
+
 
 # Anti-Features
 
