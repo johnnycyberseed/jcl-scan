@@ -34,9 +34,7 @@ public class ExecutionReportBuilder {
       log.trace("Reporting on step {}", step.getName());
       String stepPath = prefix == null ? step.getName() : prefix + "." + step.getName();
       if (step.getProc() instanceof Procedure proc) {
-        if (proc.getSteps() != null) {
           collect(out, jobName, stepPath, proc.getSteps());
-        }
       }
       if (step.getPgm() instanceof ProgramSummary summary) {
         out.add(ExecutionRecord.builder()

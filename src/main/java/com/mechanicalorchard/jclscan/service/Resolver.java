@@ -9,7 +9,10 @@ import com.mechanicalorchard.jclscan.model.Program;
 import com.mechanicalorchard.jclscan.model.ProgramRef;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,11 +39,15 @@ public class Resolver {
         Procedure resolved = app.getProcLib().resolve(procRef.getName());
         if (resolved != null) {
           log.trace("Resolved \"{}\" to {}", procRef.getName(), resolved);
-          step.setProc(resolved);
-          if (resolved.getSteps() != null) {
-            String stepPrefix = jobName + "." + step.getName();
-            resolveSteps(app, stepPrefix, resolved.getSteps());
-          }
+          // Instantiate a per-invocation copy of the procedure with symbolic parameters
+          // applied
+          Map<String, String> effectiveParams = mergeSymbolicParameters(
+              resolved.getSymbolicParameterDefaults(),
+              step.getSymbolicParameters());
+          Procedure instantiated = copyWithParams(resolved, effectiveParams);
+          step.setProc(instantiated);
+          String stepPrefix = jobName + "." + step.getName();
+          resolveSteps(app, stepPrefix, instantiated.getSteps());
         } else {
           log.warn("Unresolved procedure reference \"{}\"", procRef.getName());
         }
@@ -56,5 +63,115 @@ public class Resolver {
         }
       }
     }
+  }
+
+  private Map<String, String> mergeSymbolicParameters(Map<String, String> defaults, Map<String, String> overrides) {
+    Map<String, String> merged = new HashMap<>();
+    if (defaults != null) {
+      merged.putAll(defaults);
+    }
+    if (overrides != null) {
+      merged.putAll(overrides);
+    }
+    return merged;
+  }
+
+  private Procedure copyWithParams(Procedure resolvedProc, Map<String, String> params) {
+    List<JclStep> clonedSteps = new ArrayList<>();
+    for (JclStep step : resolvedProc.getSteps()) {
+      // Create steps based on symbolic substitution behavior
+      List<JclStep> expanded = expandStepForSymbolicParameters(resolvedProc, step, params);
+      clonedSteps.addAll(expanded);
+    }
+
+    // Carry forward defaults for transparency; keep template defaults
+    return Procedure.builder()
+        .name(resolvedProc.getName())
+        .symbolicParameterDefaults(resolvedProc.getSymbolicParameterDefaults())
+        .steps(clonedSteps)
+        .build();
+  }
+
+  private List<JclStep> expandStepForSymbolicParameters(Procedure resolvedProc, JclStep step, Map<String, String> params) {
+    List<JclStep> result = new ArrayList<>();
+
+    // Handle program substitution (primary focus for symbolic params)
+    if (step.getPgm() instanceof ProgramRef progRef && progRef.getName() != null
+        && progRef.getName().startsWith("&")) {
+      String key = progRef.getName().substring(1);
+      String defaultValue = resolvedProc.getSymbolicParameterDefaults() != null
+          ? resolvedProc.getSymbolicParameterDefaults().get(key)
+          : null;
+      String overrideValue = params != null ? params.get(key) : null;
+
+      // If there is a distinct override different from default, emit two steps:
+      // default then override
+      if (overrideValue != null && defaultValue != null && !overrideValue.equals(defaultValue)) {
+        // Default-bound step
+        result.add(buildClonedStep(step, ProgramRef.builder().name(defaultValue).build(),
+            substituteProc(step.getProc(), params)));
+        // Override-bound step
+        result.add(buildClonedStep(step, ProgramRef.builder().name(overrideValue).build(),
+            substituteProc(step.getProc(), params)));
+        return result;
+      }
+
+      // Single substitution path
+      String singleValue = (overrideValue != null) ? overrideValue : defaultValue;
+      if (singleValue != null) {
+        result.add(buildClonedStep(step, ProgramRef.builder().name(singleValue).build(),
+            substituteProc(step.getProc(), params)));
+        return result;
+      }
+      // Fall-through: no substitution value found, keep as-is
+    }
+
+    // Non-symbolic program or no values: apply simple substitution and clone once
+    Program substitutedProgram = substituteProgram(step.getPgm(), params);
+    var substitutedProc = substituteProc(step.getProc(), params);
+    result.add(buildClonedStep(step, substitutedProgram, substitutedProc));
+    return result;
+  }
+
+  private JclStep buildClonedStep(JclStep templateStep, Program program,
+      com.mechanicalorchard.jclscan.model.JclScript proc) {
+    return JclStep.builder()
+        .name(templateStep.getName())
+        .pgm(program)
+        .proc(proc)
+        .symbolicParameters(templateStep.getSymbolicParameters())
+        .build();
+  }
+
+  private Program substituteProgram(Program program, Map<String, String> params) {
+    if (!(program instanceof ProgramRef progRef)) {
+      return program;
+    }
+    String name = progRef.getName();
+    if (name != null && name.startsWith("&")) {
+      String key = name.substring(1);
+      String resolvedName = params.get(key);
+      if (resolvedName != null && !resolvedName.isEmpty()) {
+        return ProgramRef.builder().name(resolvedName).build();
+      }
+    }
+    return program;
+  }
+
+  private com.mechanicalorchard.jclscan.model.JclScript substituteProc(
+      com.mechanicalorchard.jclscan.model.JclScript proc,
+      Map<String, String> params) {
+    if (!(proc instanceof ProcedureRef pr)) {
+      return proc;
+    }
+    String name = pr.getName();
+    if (name != null && name.startsWith("&")) {
+      String key = name.substring(1);
+      String resolvedName = params.get(key);
+      if (resolvedName != null && !resolvedName.isEmpty()) {
+        return ProcedureRef.builder().name(resolvedName).build();
+      }
+    }
+    return proc;
   }
 }
