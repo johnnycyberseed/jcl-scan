@@ -16,13 +16,17 @@ class ResolverTests {
   @Autowired
   private Resolver resolver;
 
-  @SuppressWarnings("null")
-  @Test
-  void resolve_resolvesProcedureAndProgramReferencesInPlace() {
-    // Build JclApp with one job, one procedure, and two programs
+  private JclApp buildSampleApp() {
     JclApp app = new JclApp();
 
-    // Register procedure DAILYDO with two steps
+    Job job = Job.builder()
+        .name("DAILY01")
+        .steps(List.of(
+            JclStep.builder().name("STEP01").proc(ProcedureRef.builder().name("DAILYDO").build()).build()
+        ))
+        .build();
+    app.getJobs().add(job);
+
     Procedure dailyDo = Procedure.builder()
         .name("DAILYDO")
         .steps(List.of(
@@ -32,7 +36,6 @@ class ResolverTests {
         .build();
     app.getProcLib().register("DAILYDO", dailyDo);
 
-    // Register programs in link lib
     app.getLinkLib().register("PAYROLL1", ProgramSummary.builder()
         .fileName("PAYROLL1.cbl")
         .programName("PAYROLL1")
@@ -51,26 +54,32 @@ class ResolverTests {
         .numberOfRoutines(0)
         .build());
 
-    // Create job DAILY01 that EXECs procedure DAILYDO
-    Job job = Job.builder()
-        .name("DAILY01")
-        .steps(List.of(
-            JclStep.builder().name("STEP01").proc(ProcedureRef.builder().name("DAILYDO").build()).build()
-        ))
-        .build();
-    app.getJobs().add(job);
+    return app;
+  }
 
-    // When
+  @SuppressWarnings("null")
+  @Test
+  void resolve_resolvesJobStepProcReference_toProcedure() {
+    JclApp app = buildSampleApp();
+
     resolver.resolve(app);
 
-    // Then: the job's step should now reference a resolved Procedure, not a ProcedureRef
     JclStep step01 = app.getJobs().get(0).getSteps().get(0);
     assertThat(step01.getProc()).isInstanceOf(Procedure.class);
     assertThat(step01.getProc()).isNotInstanceOf(ProcedureRef.class);
     Procedure resolvedProc = (Procedure) step01.getProc();
     assertThat(resolvedProc.getName()).isEqualTo("DAILYDO");
+  }
 
-    // And inside the resolved procedure, program references should be resolved
+  @SuppressWarnings("null")
+  @Test
+  void resolve_resolvesProcedureProgramReferences_toPrograms() {
+    JclApp app = buildSampleApp();
+
+    resolver.resolve(app);
+
+    Procedure resolvedProc = (Procedure) app.getJobs().get(0).getSteps().get(0).getProc();
+
     JclStep doThing = resolvedProc.getSteps().get(0);
     assertThat(doThing.getPgm()).isNotNull();
     assertThat(doThing.getPgm()).isInstanceOf(ProgramSummary.class);
