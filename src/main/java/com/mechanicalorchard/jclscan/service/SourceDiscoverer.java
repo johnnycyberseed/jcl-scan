@@ -5,7 +5,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,7 +23,11 @@ public class SourceDiscoverer {
     log.info("Discovering sources in {}", paths);
     List<AppSourceFile> discovered = new ArrayList<>();
     for (Path path : paths) {
-      if (Files.isDirectory(path)) {
+      String raw = path.toString();
+      if (raw.startsWith("classpath:")) {
+        String cpRoot = raw.substring("classpath:".length());
+        discoverFromClasspath(discovered, cpRoot);
+      } else if (Files.isDirectory(path)) {
         try (var stream = Files.walk(path)) {
           stream
               .filter(Files::isRegularFile)
@@ -32,6 +38,29 @@ public class SourceDiscoverer {
       }
     }
     return discovered;
+  }
+
+  private void discoverFromClasspath(List<AppSourceFile> out, String classpathRoot) throws IOException {
+    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+    var url = cl.getResource(classpathRoot);
+    if (url == null) {
+      log.warn("Classpath root '{}' not found", classpathRoot);
+      return;
+    }
+    try {
+      Path rootPath = Path.of(url.toURI());
+      try (var stream = Files.walk(rootPath)) {
+        List<Path> files = stream
+            .filter(Files::isRegularFile)
+            .collect(Collectors.toList());
+
+        files.stream()
+            .sorted(Comparator.comparing((Path p) -> p.getFileName().toString().toLowerCase()).reversed())
+            .forEach(p -> addIfKnown(out, p));
+      }
+    } catch (Exception e) {
+      throw new IOException("Failed to read classpath resources under '" + classpathRoot + "'", e);
+    }
   }
 
   private void addIfKnown(List<AppSourceFile> out, Path path) {
@@ -65,5 +94,3 @@ public class SourceDiscoverer {
     return null;
   }
 }
-
-

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.List;
 
@@ -151,6 +152,35 @@ class SourceDiscovererTests {
     assertThat(byName.get("EZT1.ezt").getKind()).isEqualTo(AppSourceFile.Kind.EASYTRIEVE);
     assertThat(byName.get("EZT1.ezt").getContent().getContentAsString(StandardCharsets.UTF_8))
         .isEqualTo(Files.readString(ezt, StandardCharsets.UTF_8));
+  }
+
+  @Test
+  void discover_findsSourcesFromResources() throws IOException {
+    List<AppSourceFile> discovered = sourceDiscoverer.discover(List.of(Paths.get("classpath:libs")));
+
+    assertThat(discovered).hasSize(2);
+
+    assertThat(discovered.get(0).getName()).isEqualTo("IMSBATCH.jcl");
+    assertThat(discovered.get(0).getKind()).isEqualTo(AppSourceFile.Kind.JCL);
+    assertThat(discovered.get(0).getContent().getContentAsString(StandardCharsets.UTF_8))
+        .isEqualTo(readClasspath("libs/sys1/proclib/IMSBATCH.jcl"));
+
+    assertThat(discovered.get(1).getName()).isEqualTo("DLIBATCH.jcl");
+    assertThat(discovered.get(1).getKind()).isEqualTo(AppSourceFile.Kind.JCL);
+    assertThat(discovered.get(1).getContent().getContentAsString(StandardCharsets.UTF_8))
+        .isEqualTo(readClasspath("libs/sys1/proclib/DLIBATCH.jcl"));
+  }
+
+  private static String readClasspath(String resourcePath) throws IOException {
+    var url = Thread.currentThread().getContextClassLoader().getResource(resourcePath);
+    if (url == null) {
+      throw new IOException("Classpath resource not found: " + resourcePath);
+    }
+    try {
+      return Files.readString(Path.of(url.toURI()), StandardCharsets.UTF_8);
+    } catch (Exception e) {
+      throw new IOException("Failed to read classpath resource: " + resourcePath, e);
+    }
   }
 }
 
