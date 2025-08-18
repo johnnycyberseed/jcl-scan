@@ -43,7 +43,7 @@ public class AppScanner {
     List<AppSourceFile> sources = sourceDiscoverer.discover(inputPaths);
 
     JclApp app = appParser.parse(sources);
-    resolver.resolve(app);
+    resolver.resolve(app.getJobs(), List.of(app.getProcLib()), List.of(app.getLinkLib()));
 
     List<ProgramSummary> summaries = app.getLinkLib().registered().stream()
         .map(p -> (ProgramSummary) p)

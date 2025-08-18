@@ -61,7 +61,7 @@ class ResolverTests {
   void resolve_resolvesProcRef_toProcedure() {
     JclApp app = setupSimpleJclApp();
 
-    resolver.resolve(app);
+    resolver.resolve(app.getJobs(), List.of(app.getProcLib()), List.of(app.getLinkLib()));
 
     JclStep step01 = app.getJobs().get(0).getSteps().get(0);
     assertThat(step01.getProc()).isInstanceOf(Procedure.class);
@@ -75,7 +75,7 @@ class ResolverTests {
   void resolve_resolvesProgramRefs_toPrograms() {
     JclApp app = setupSimpleJclApp();
 
-    resolver.resolve(app);
+    resolver.resolve(app.getJobs(), List.of(app.getProcLib()), List.of(app.getLinkLib()));
 
     Procedure resolvedProc = (Procedure) app.getJobs().get(0).getSteps().get(0).getProc();
 
@@ -139,7 +139,7 @@ class ResolverTests {
   void resolve_respectsDefaultSymbolicParameters() {
     JclApp app = setupJclAppWithSymbolicParameters();
 
-    resolver.resolve(app);
+    resolver.resolve(app.getJobs(), List.of(app.getProcLib()), List.of(app.getLinkLib()));
 
     Procedure resolvedProc = (Procedure) app.getJobs().get(0).getSteps().get(0).getProc();
 
@@ -154,7 +154,7 @@ class ResolverTests {
   void resolve_respectsSymbolicParameterOverrides() {
     JclApp app = setupJclAppWithSymbolicParameters();
 
-    resolver.resolve(app);
+    resolver.resolve(app.getJobs(), List.of(app.getProcLib()), List.of(app.getLinkLib()));
 
     Procedure resolvedProc = (Procedure) app.getJobs().get(0).getSteps().get(1).getProc();
 
@@ -162,5 +162,63 @@ class ResolverTests {
     assertThat(stepWithCustomParams.getPgm()).isNotNull();
     assertThat(stepWithCustomParams.getPgm()).isInstanceOf(ProgramSummary.class);
     assertThat(((ProgramSummary) stepWithCustomParams.getPgm()).getProgramName()).isEqualTo("CUSTOM");
+  }
+
+  private JclApp setupJobReferencingProcedureFromSecondaryLibrary() {
+    JclApp app = new JclApp();
+
+    Job job = Job.builder()
+        .name("WITHSLIB")
+        .steps(List.of(
+            JclStep.builder().name("STEP01").proc(ProcedureRef.builder().name("DLIBATCH").build()).symbolicParameters(Map.of(
+                "MBR", "CBL01",
+                "PSB", "CBL01")).build()))
+        .build();
+    app.getJobs().add(job);
+
+    app.getLinkLib().register("CBL01", ProgramSummary.builder()
+        .fileName("CBL01.cbl")
+        .programName("CBL01")
+        .kind(Program.Kind.COBOL)
+        .linesOfCode(4)
+        .numberOfConditionals(0)
+        .numberOfRoutines(0)
+        .build());
+
+    return app;
+  }
+
+  private Library<Procedure> setupSecondaryLibrary() {
+    Library<Procedure> lib = new Library<>();
+    lib.register("DLIBATCH", Procedure.builder()
+        .name("DLIBATCH")
+        .symbolicParameterDefaults(Map.of(
+            "MBR", "",
+            "PSB", ""))
+        .steps(List.of(JclStep.builder().name("EXECMBR").pgm(ProgramRef.builder().name("&MBR").build()).build()))
+        .build());
+    return lib;
+  }
+
+  @SuppressWarnings("null")
+  @Test
+  void resolve_resolvesSystemLibraryProcedures() {
+    JclApp app = setupJobReferencingProcedureFromSecondaryLibrary();
+
+    List<Library<Procedure>> jclLib = List.of(app.getProcLib(), setupSecondaryLibrary());
+    List<Library<Program>> jobLib = List.of(app.getLinkLib());
+
+    resolver.resolve(app.getJobs(), jclLib, jobLib);
+
+    JclStep step01 = app.getJobs().get(0).getSteps().get(0);
+    assertThat(step01.getProc()).isInstanceOf(Procedure.class);
+    assertThat(step01.getProc()).isNotInstanceOf(ProcedureRef.class);
+    Procedure resolvedProc = (Procedure) step01.getProc();
+    assertThat(resolvedProc.getName()).isEqualTo("DLIBATCH");
+
+    step01 = resolvedProc.getSteps().get(0);
+    assertThat(step01.getPgm()).isNotNull();
+    assertThat(step01.getPgm()).isInstanceOf(ProgramSummary.class);
+    assertThat(((ProgramSummary) step01.getPgm()).getProgramName()).isEqualTo("CBL01");
   }
 }

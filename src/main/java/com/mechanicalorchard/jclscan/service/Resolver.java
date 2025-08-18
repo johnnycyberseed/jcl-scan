@@ -1,8 +1,8 @@
 package com.mechanicalorchard.jclscan.service;
 
 import com.mechanicalorchard.jclscan.model.JclStep;
-import com.mechanicalorchard.jclscan.model.JclApp;
 import com.mechanicalorchard.jclscan.model.Job;
+import com.mechanicalorchard.jclscan.model.Library;
 import com.mechanicalorchard.jclscan.model.Procedure;
 import com.mechanicalorchard.jclscan.model.ProcedureRef;
 import com.mechanicalorchard.jclscan.model.Program;
@@ -10,8 +10,9 @@ import com.mechanicalorchard.jclscan.model.ProgramRef;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
 import java.util.Map;
 
 import lombok.extern.slf4j.Slf4j;
@@ -20,23 +21,23 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class Resolver {
 
-  public void resolve(JclApp app) {
+  public void resolve(List<Job> jobs, List<Library<Procedure>> jclLib, List<Library<Program>> jobLib) {
     log.info("JCL app has {} job(s), {} procedure(s), and {} program(s)",
-        app.getJobs().size(),
-        app.getProcLib().registered().size(),
-        app.getLinkLib().registered().size());
-    for (Job job : app.getJobs()) {
+        jobs.size(),
+        jclLib.size(),
+        jobLib.size());
+    for (Job job : jobs) {
       log.debug("Processing job {}", job.getName());
-      resolveSteps(app, job.getName(), job.getSteps());
+      resolveSteps(jclLib, jobLib, job.getName(), job.getSteps());
     }
   }
 
-  private void resolveSteps(JclApp app, String jobName, List<JclStep> steps) {
+  private void resolveSteps(List<Library<Procedure>> jclLib, List<Library<Program>> jobLib, String jobName, List<JclStep> steps) {
     for (JclStep step : steps) {
       log.debug("Processing step {}.{}", jobName, step.getName());
       if (step.getProc() instanceof ProcedureRef procRef) {
         log.trace("Resolving procedure reference \"{}\"", procRef.getName());
-        Procedure resolved = app.getProcLib().resolve(procRef.getName());
+        Procedure resolved = jclLib.stream().map(l -> l.resolve(procRef.getName())).filter(Objects::nonNull).findFirst().orElse(null);
         if (resolved != null) {
           log.trace("Resolved \"{}\" to {}", procRef.getName(), resolved);
           // Instantiate a per-invocation copy of the procedure with symbolic parameters
@@ -47,14 +48,14 @@ public class Resolver {
           Procedure instantiated = copyWithParams(resolved, effectiveParams);
           step.setProc(instantiated);
           String stepPrefix = jobName + "." + step.getName();
-          resolveSteps(app, stepPrefix, instantiated.getSteps());
+          resolveSteps(jclLib, jobLib, stepPrefix, instantiated.getSteps());
         } else {
           log.warn("Unresolved procedure reference \"{}\"", procRef.getName());
         }
       }
 
       if (step.getPgm() instanceof ProgramRef progRef) {
-        Program resolved = app.getLinkLib().resolve(progRef.getName());
+        Program resolved = jobLib.stream().map(l -> l.resolve(progRef.getName())).filter(Objects::nonNull).findFirst().orElse(null);
         if (resolved != null) {
           log.trace("Resolved \"{}\" to {}", progRef.getName(), resolved);
           step.setPgm(resolved);
@@ -104,9 +105,9 @@ public class Resolver {
           : null;
       String overrideValue = params != null ? params.get(key) : null;
 
-      // If there is a distinct override different from default, emit two steps:
-      // default then override
-      if (overrideValue != null && defaultValue != null && !overrideValue.equals(defaultValue)) {
+      // If both default and override are present and non-blank and different,
+      // emit two steps: default then override. Treat blank defaults as absent.
+      if (hasText(overrideValue) && hasText(defaultValue) && !overrideValue.equals(defaultValue)) {
         // Default-bound step
         result.add(buildClonedStep(step, ProgramRef.builder().name(defaultValue).build(),
             substituteProc(step.getProc(), params)));
@@ -117,7 +118,7 @@ public class Resolver {
       }
 
       // Single substitution path
-      String singleValue = (overrideValue != null) ? overrideValue : defaultValue;
+      String singleValue = hasText(overrideValue) ? overrideValue : (hasText(defaultValue) ? defaultValue : null);
       if (singleValue != null) {
         result.add(buildClonedStep(step, ProgramRef.builder().name(singleValue).build(),
             substituteProc(step.getProc(), params)));
@@ -131,6 +132,10 @@ public class Resolver {
     var substitutedProc = substituteProc(step.getProc(), params);
     result.add(buildClonedStep(step, substitutedProgram, substitutedProc));
     return result;
+  }
+
+  private boolean hasText(String value) {
+    return value != null && !value.trim().isEmpty();
   }
 
   private JclStep buildClonedStep(JclStep templateStep, Program program,

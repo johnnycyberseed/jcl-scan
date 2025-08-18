@@ -1,0 +1,3 @@
+//DLIBATCH PROC MBR=
+//         EXEC PGM=&MBR
+//*
