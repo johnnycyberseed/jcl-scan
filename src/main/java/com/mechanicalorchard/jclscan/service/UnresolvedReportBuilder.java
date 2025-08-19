@@ -11,6 +11,7 @@ import com.mechanicalorchard.jclscan.model.JclStep;
 import com.mechanicalorchard.jclscan.model.Job;
 import com.mechanicalorchard.jclscan.model.Procedure;
 import com.mechanicalorchard.jclscan.model.ProcedureRef;
+import com.mechanicalorchard.jclscan.model.ProgramRef;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,13 +24,13 @@ public class UnresolvedReportBuilder {
     log.info("Building unresolved report for {} jobs", app.getJobs().size());
     List<UnresolvedRecord> unresolvedItems = new ArrayList<>();
     for (Job job : app.getJobs()) {
-      log.debug("Checking job {} for unresolved procedures", job.getName());
-      collectUnresolvedProcedures(unresolvedItems, job.getName(), null, job.getSteps());
+      log.debug("Checking job {} for unresolved procedures and programs", job.getName());
+      collectUnresolvedItems(unresolvedItems, job.getName(), null, job.getSteps());
     }
     return UnresolvedReport.builder().unresolvedItems(unresolvedItems).build();
   }
 
-  private void collectUnresolvedProcedures(List<UnresolvedRecord> out, String jobName, String prefix, List<JclStep> steps) {
+  private void collectUnresolvedItems(List<UnresolvedRecord> out, String jobName, String prefix, List<JclStep> steps) {
     for (JclStep step : steps) {
       String stepPath = prefix == null ? step.getName() : prefix + "." + step.getName();
       
@@ -44,9 +45,20 @@ public class UnresolvedReportBuilder {
             .build());
       }
       
+      // Check if this step has an unresolved program reference
+      if (step.getPgm() instanceof ProgramRef progRef) {
+        log.trace("Found unresolved program reference: {}", progRef.getName());
+        out.add(UnresolvedRecord.builder()
+            .jobName(jobName)
+            .stepName(stepPath)
+            .procedureName("(program)")
+            .programName(progRef.getName())
+            .build());
+      }
+      
       // If the step has a resolved procedure, recursively check its steps
       if (step.getProc() instanceof Procedure proc) {
-        collectUnresolvedProcedures(out, jobName, stepPath, proc.getSteps());
+        collectUnresolvedItems(out, jobName, stepPath, proc.getSteps());
       }
     }
   }

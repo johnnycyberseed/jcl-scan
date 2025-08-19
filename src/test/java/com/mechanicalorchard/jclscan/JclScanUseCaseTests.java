@@ -55,6 +55,8 @@ class JclScanUseCaseTests {
         //DOTHING  EXEC PGM=PAYROLL1
         //*        scenario: referring to Easytrieve program
         //RPTTHING EXEC PGM=EZT1
+        //*        scenario: unresolved program
+        //UNKPGM   EXEC PGM=UNKPGM
         """.strip(), StandardCharsets.UTF_8);
 
     Files.writeString(imspgm, """
@@ -118,6 +120,7 @@ class JclScanUseCaseTests {
     expected = String.join("\n",
         "Job,Step,Procedure,Program",
         "DAILY01,STEP01.UNKPROC,UNKPROC,(unknown)",
+        "DAILY01,STEP01.UNKPGM,(program),UNKPGM",
         "");
     assertThat(content).isEqualTo(expected);
   }
