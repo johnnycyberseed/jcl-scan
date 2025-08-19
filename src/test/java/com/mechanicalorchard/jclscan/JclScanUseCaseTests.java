@@ -36,6 +36,7 @@ class JclScanUseCaseTests {
 
     Path job = jobsDir.resolve("DAILY01.jcl");
     Path proc = procsDir.resolve("DAILYDO.jcl");
+    Path imspgm = pgmsDir.resolve("IMSPGM.cbl");
     Path cobol = pgmsDir.resolve("PAYROLL1.cbl");
     Path ezt = pgmsDir.resolve("EZT1.ezt");
 
@@ -46,14 +47,29 @@ class JclScanUseCaseTests {
 
     Files.writeString(proc, """
         //DAILYDO  PROC
+        //*        scenario: using a system library procedure that invokes a program
+        //QUERY    EXEC DLIBATCH,MBR=IMSPGM
+        //*        scenario: multiple steps in a procedure; referring to COBOL program
         //DOTHING  EXEC PGM=PAYROLL1
+        //*        scenario: referring to Easytrieve program
         //RPTTHING EXEC PGM=EZT1
+        """.strip(), StandardCharsets.UTF_8);
+
+    Files.writeString(imspgm, """
+        IDENTIFICATION DIVISION.
+        PROGRAM-ID. IMSPGM.
+        PROCEDURE DIVISION.
+          DISPLAY 'Load IMS data'.
+        STOP RUN.
         """.strip(), StandardCharsets.UTF_8);
 
     Files.writeString(cobol, """
         IDENTIFICATION DIVISION.
         PROGRAM-ID. PAYROLL1.
         PROCEDURE DIVISION.
+          DISPLAY 'Payroll data header'.
+          DISPLAY 'Payroll data data'.
+          DISPLAY 'Payroll data footer'.
         STOP RUN.
         """.strip(), StandardCharsets.UTF_8);
 
@@ -75,7 +91,8 @@ class JclScanUseCaseTests {
     String content = Files.readString(programReportFile, StandardCharsets.UTF_8);
     String expected = String.join("\n",
         "File Name,Program Name,Program Type,Lines of Code,Number of conditionals,Number of routines",
-        "PAYROLL1.cbl,PAYROLL1,COBOL,4,0,0",
+        "PAYROLL1.cbl,PAYROLL1,COBOL,7,0,0",
+        "IMSPGM.cbl,IMSPGM,COBOL,5,0,0",
         "EZT1.ezt,EZT1,Easytrieve,5,0,0",
         "");
     assertThat(content).isEqualTo(expected);
@@ -86,7 +103,8 @@ class JclScanUseCaseTests {
     content = Files.readString(executionReportFile, StandardCharsets.UTF_8);
     expected = String.join("\n",
         "Job,Step,Procedure,Program,Program Type,Lines of Code",
-        "DAILY01,STEP01.DOTHING,(program),PAYROLL1,COBOL,4",
+        "DAILY01,STEP01.QUERY.DLIBATCH,(program),IMSPGM,COBOL,5",
+        "DAILY01,STEP01.DOTHING,(program),PAYROLL1,COBOL,7",
         "DAILY01,STEP01.RPTTHING,(program),EZT1,EASYTRIEVE,5",
         "");
     assertThat(content).isEqualTo(expected);

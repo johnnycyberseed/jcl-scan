@@ -3,7 +3,9 @@ package com.mechanicalorchard.jclscan.service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.ArrayList;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,14 +42,29 @@ public class AppScanner {
   }
 
   public void scan(Path outputDirectory, List<Path> inputPaths) throws IOException {
-    List<AppSourceFile> sources = sourceDiscoverer.discover(inputPaths);
+    // Discover application sources from provided inputs
+    List<AppSourceFile> appSources = sourceDiscoverer.discover(inputPaths);
+    // Also discover commonly catalogued procedures/programs from classpath libs
+    List<AppSourceFile> systemSources = sourceDiscoverer.discover(List.of(Paths.get("classpath:libs")));
 
-    JclApp app = appParser.parse(sources);
-    resolver.resolve(app.getJobs(), List.of(app.getProcLib()), List.of(app.getLinkLib()));
+    // Parse into separate applications so we can keep distinct libraries and control precedence
+    JclApp app = appParser.parse(appSources);
+    JclApp system = appParser.parse(systemSources);
 
-    List<ProgramSummary> summaries = app.getLinkLib().registered().stream()
+    // Resolve jobs using app libraries with precedence, followed by system libraries
+    resolver.resolve(
+        app.getJobs(),
+        List.of(app.getProcLib(), system.getProcLib()),
+        List.of(app.getLinkLib(), system.getLinkLib()));
+
+    // Build program report from both app and system link libraries
+    List<ProgramSummary> summaries = new ArrayList<>();
+    summaries.addAll(app.getLinkLib().registered().stream()
         .map(p -> (ProgramSummary) p)
-        .toList();
+        .toList());
+    summaries.addAll(system.getLinkLib().registered().stream()
+        .map(p -> (ProgramSummary) p)
+        .toList());
     ProgramReport programReport = programReportBuilder.build(summaries);
     ExecutionReport executionReport = executionReportBuilder.build(app);
 
