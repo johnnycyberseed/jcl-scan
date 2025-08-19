@@ -1,0 +1,17 @@
+//* ----------------------------------------------------------------
+//* JOB 11 — Conditional: sort then run transform only on RC=0
+//* ----------------------------------------------------------------
+//MOJ011  JOB (ACCT),'COND FLOW',CLASS=A,MSGCLASS=H,MSGLEVEL=(1,1),NOTIFY=&SYSUID
+//        JCLLIB ORDER=(MO.PROCLIB,SIGYPROC,SYS1.PROCLIB)
+//SRT     EXEC MOSORT,IN=MO.DW.IN.GDG(0),OUT=MO.WIP.SORTED,SYSINLIB=MO.DUMMY,SYSINMEM=DUMMY
+//S1.SYSIN DD *
+  SORT FIELDS=(21,5,CH,A)
+/*
+// IF (SRT.RC = 0) THEN
+//RUN     EXEC PGM=TRANSFORM,REGION=0M
+//STEPLIB DD  DSN=MO.COBOL.LOAD,DISP=SHR
+//INFILE  DD  DSN=MO.WIP.SORTED,DISP=SHR
+//OUTFILE DD  DSN=MO.DW.OUT.GDG(+1),DISP=(NEW,CATLG,DELETE),
+//            SPACE=(CYL,(10,5),RLSE),DCB=(RECFM=VB,LRECL=400,BLKSIZE=0)
+//SYSPRINT DD SYSOUT=*
+// ENDIF

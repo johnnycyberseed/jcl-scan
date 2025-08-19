@@ -1,0 +1,18 @@
+//* ----------------------------------------------------------------
+//* JOB 08 — Create VSAM KSDS and load from outbound (IDCAMS REPRO)
+//* ----------------------------------------------------------------
+//MOJ008  JOB (ACCT),'VSAM LOAD',CLASS=A,MSGCLASS=H,MSGLEVEL=(1,1),NOTIFY=&SYSUID
+//        JCLLIB ORDER=(MO.PROCLIB,SIGYPROC,SYS1.PROCLIB)
+//IDC1    EXEC PGM=IDCAMS
+//SYSPRINT DD SYSOUT=*
+//IN      DD  DSN=MO.DW.OUT.GDG(0),DISP=SHR
+//SYSIN   DD *
+  DEFINE CLUSTER (
+     NAME(MO.VSAM.CUST.KSDS) INDEXED
+     KEYS(10,0) RECORDSIZE(400,400) CISZ(8192) SHAREOPTIONS(2 3)
+  ) -
+  DATA  (NAME(MO.VSAM.CUST.KSDS.DATA)) -
+  INDEX (NAME(MO.VSAM.CUST.KSDS.INDEX))
+  IF LASTCC = 8 THEN SET MAXCC = 0
+  REPRO INFILE(IN) OUTDATASET(MO.VSAM.CUST.KSDS)
+/*
