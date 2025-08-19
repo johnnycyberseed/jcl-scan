@@ -49,6 +49,8 @@ class JclScanUseCaseTests {
         //DAILYDO  PROC
         //*        scenario: using a system library procedure that invokes a program
         //QUERY    EXEC DLIBATCH,MBR=IMSPGM
+        //*        scenario: unresolved procedure
+        //UNKPROC  EXEC UNKPROC
         //*        scenario: multiple steps in a procedure; referring to COBOL program
         //DOTHING  EXEC PGM=PAYROLL1
         //*        scenario: referring to Easytrieve program
@@ -106,6 +108,16 @@ class JclScanUseCaseTests {
         "DAILY01,STEP01.QUERY.DLIBATCH,(program),IMSPGM,COBOL,5",
         "DAILY01,STEP01.DOTHING,(program),PAYROLL1,COBOL,7",
         "DAILY01,STEP01.RPTTHING,(program),EZT1,EASYTRIEVE,5",
+        "");
+    assertThat(content).isEqualTo(expected);
+
+    Path unresolvedReportFile = outputDirectory.resolve("unresolved-report.csv");
+
+    assertThat(Files.exists(unresolvedReportFile)).isTrue();
+    content = Files.readString(unresolvedReportFile, StandardCharsets.UTF_8);
+    expected = String.join("\n",
+        "Job,Step,Procedure,Program",
+        "DAILY01,STEP01.UNKPROC,UNKPROC,(unknown)",
         "");
     assertThat(content).isEqualTo(expected);
   }

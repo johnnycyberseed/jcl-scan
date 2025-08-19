@@ -37,7 +37,13 @@ public class AppParser {
         String libMemberName;
         switch(appSourceFile.getKind()) {
           case JCL:
-            JclScript jclFile = jclParser.parseJclFile(source);
+            JclScript jclFile;
+            try {
+              jclFile = jclParser.parseJclFile(source);
+            } catch (IllegalArgumentException e) {
+              log.error("Error parsing JCL file {}: {}", appSourceFile.getName(), e.getMessage());
+              throw e;
+            }
             switch (jclFile) {
               case Job job -> app.getJobs().add(job);
               case Procedure proc -> {

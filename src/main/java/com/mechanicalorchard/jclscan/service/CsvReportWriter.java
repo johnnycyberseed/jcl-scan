@@ -12,6 +12,8 @@ import com.mechanicalorchard.jclscan.model.ProgramReport;
 import com.mechanicalorchard.jclscan.model.ExecutionReport;
 import com.mechanicalorchard.jclscan.model.ExecutionRecord;
 import com.mechanicalorchard.jclscan.model.ProgramSummary;
+import com.mechanicalorchard.jclscan.model.UnresolvedReport;
+import com.mechanicalorchard.jclscan.model.UnresolvedRecord;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,6 +54,22 @@ public class CsvReportWriter implements ReportWriter {
                 writer.write("\n");
             }
             log.info("Wrote execution report to {}", outputFile);
+        }
+    }
+
+    @Override
+    public void writeUnresolvedReport(Path outputFile, UnresolvedReport report) throws IOException {
+        try (BufferedWriter writer = Files.newBufferedWriter(outputFile, StandardCharsets.UTF_8)) {
+            writer.write("Job,Step,Procedure,Program\n");
+            for (UnresolvedRecord row : report.getUnresolvedItems()) {
+                writer.write(String.join(",",
+                        escape(row.getJobName()),
+                        escape(row.getStepName()),
+                        escape(row.getProcedureName()),
+                        escape(row.getProgramName())));
+                writer.write("\n");
+            }
+            log.info("Wrote unresolved report to {}", outputFile);
         }
     }
 

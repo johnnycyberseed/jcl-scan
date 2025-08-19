@@ -15,6 +15,7 @@ import com.mechanicalorchard.jclscan.model.ExecutionReport;
 import com.mechanicalorchard.jclscan.model.JclApp;
 import com.mechanicalorchard.jclscan.model.ProgramReport;
 import com.mechanicalorchard.jclscan.model.ProgramSummary;
+import com.mechanicalorchard.jclscan.model.UnresolvedReport;
 
 @Service
 public class AppScanner {
@@ -27,6 +28,9 @@ public class AppScanner {
 
   @Autowired
   private ExecutionReportBuilder executionReportBuilder;
+
+  @Autowired
+  private UnresolvedReportBuilder unresolvedReportBuilder;
 
   @Autowired
   private AppParser appParser;
@@ -67,11 +71,14 @@ public class AppScanner {
         .toList());
     ProgramReport programReport = programReportBuilder.build(summaries);
     ExecutionReport executionReport = executionReportBuilder.build(app);
+    UnresolvedReport unresolvedReport = unresolvedReportBuilder.build(app);
 
     Files.createDirectories(outputDirectory);
     Path programReportOutputFile = outputDirectory.resolve("program-report.csv");
     Path executionReportOutputFile = outputDirectory.resolve("execution-report.csv");
+    Path unresolvedReportOutputFile = outputDirectory.resolve("unresolved-report.csv");
     reportWriter.writeProgramReport(programReportOutputFile, programReport);
     reportWriter.writeExecutionReport(executionReportOutputFile, executionReport);
+    reportWriter.writeUnresolvedReport(unresolvedReportOutputFile, unresolvedReport);
   }
 }
