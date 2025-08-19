@@ -96,38 +96,26 @@ public class Resolver {
   private List<JclStep> expandStepForSymbolicParameters(Procedure resolvedProc, JclStep step, Map<String, String> params) {
     List<JclStep> result = new ArrayList<>();
 
-    // Handle program substitution (primary focus for symbolic params)
     if (step.getPgm() instanceof ProgramRef progRef && progRef.getName() != null
         && progRef.getName().startsWith("&")) {
-      String key = progRef.getName().substring(1);
+      SymbolicParameterParts parts = parseSymbolicParameter(progRef.getName());
+
       String defaultValue = resolvedProc.getSymbolicParameterDefaults() != null
-          ? resolvedProc.getSymbolicParameterDefaults().get(key)
+          ? resolvedProc.getSymbolicParameterDefaults().get(parts.key())
           : null;
-      String overrideValue = params != null ? params.get(key) : null;
+      String overrideValue = params != null ? params.get(parts.key()) : null;
 
-      // If both default and override are present and non-blank and different,
-      // emit two steps: default then override. Treat blank defaults as absent.
-      if (hasText(overrideValue) && hasText(defaultValue) && !overrideValue.equals(defaultValue)) {
-        // Default-bound step
-        result.add(buildClonedStep(step, ProgramRef.builder().name(defaultValue).build(),
-            substituteProc(step.getProc(), params)));
-        // Override-bound step
-        result.add(buildClonedStep(step, ProgramRef.builder().name(overrideValue).build(),
-            substituteProc(step.getProc(), params)));
-        return result;
-      }
+      String singleValue = hasText(overrideValue) ? overrideValue
+          : (hasText(defaultValue) ? defaultValue : null);
 
-      // Single substitution path
-      String singleValue = hasText(overrideValue) ? overrideValue : (hasText(defaultValue) ? defaultValue : null);
       if (singleValue != null) {
-        result.add(buildClonedStep(step, ProgramRef.builder().name(singleValue).build(),
+        String finalName = singleValue + parts.suffix();
+        result.add(buildClonedStep(step, ProgramRef.builder().name(finalName).build(),
             substituteProc(step.getProc(), params)));
         return result;
       }
-      // Fall-through: no substitution value found, keep as-is
     }
 
-    // Non-symbolic program or no values: apply simple substitution and clone once
     Program substitutedProgram = substituteProgram(step.getPgm(), params);
     var substitutedProc = substituteProc(step.getProc(), params);
     result.add(buildClonedStep(step, substitutedProgram, substitutedProc));
@@ -136,6 +124,30 @@ public class Resolver {
 
   private boolean hasText(String value) {
     return value != null && !value.trim().isEmpty();
+  }
+
+  private record SymbolicParameterParts(String key, String suffix) {}
+
+  private SymbolicParameterParts parseSymbolicParameter(String symbolicName) {
+    if (!symbolicName.startsWith("&")) {
+      throw new IllegalArgumentException("Symbolic parameter must start with &: " + symbolicName);
+    }
+
+    String raw = symbolicName.substring(1); // Remove the & prefix
+
+    // Extract valid JCL identifier characters and get the length
+    int keyEnd = raw.chars()
+        .takeWhile(ch -> Character.isLetterOrDigit(ch) || ch == '_' || ch == '@' || ch == '$' || ch == '#')
+        .collect(StringBuilder::new, (sb, ch) -> sb.append((char) ch), StringBuilder::append)
+        .length();
+
+    String key = raw.substring(0, keyEnd);
+    String suffix = raw.substring(keyEnd);
+    if (suffix.startsWith(".")) {
+      suffix = suffix.substring(1);
+    }
+
+    return new SymbolicParameterParts(key, suffix);
   }
 
   private JclStep buildClonedStep(JclStep templateStep, Program program,
@@ -154,10 +166,10 @@ public class Resolver {
     }
     String name = progRef.getName();
     if (name != null && name.startsWith("&")) {
-      String key = name.substring(1);
-      String resolvedName = params.get(key);
+      SymbolicParameterParts parts = parseSymbolicParameter(name);
+      String resolvedName = params != null ? params.get(parts.key()) : null;
       if (resolvedName != null && !resolvedName.isEmpty()) {
-        return ProgramRef.builder().name(resolvedName).build();
+        return ProgramRef.builder().name(resolvedName + parts.suffix()).build();
       }
     }
     return program;

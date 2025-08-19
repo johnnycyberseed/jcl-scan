@@ -96,8 +96,8 @@ class ResolverTests {
     Job job = Job.builder()
         .name("SYMPARAM")
         .steps(List.of(
-            JclStep.builder().name("STEP01").proc(ProcedureRef.builder().name("WITHSYM").build()).build(),
-            JclStep.builder().name("STEP02").proc(ProcedureRef.builder().name("WITHSYM").build())
+            JclStep.builder().name("WDEFAULT").proc(ProcedureRef.builder().name("WITHSYM").build()).build(),
+            JclStep.builder().name("WCUSTOM").proc(ProcedureRef.builder().name("WITHSYM").build())
                 .symbolicParameters(Map.of(
                     "MBR", "CUSTOM"))
                 .build()))
@@ -109,7 +109,9 @@ class ResolverTests {
         .symbolicParameterDefaults(Map.of(
             "MBR", "DEFAULT"))
         .steps(List.of(
-            JclStep.builder().name("DOIT").pgm(ProgramRef.builder().name("&MBR").build()).build()))
+            JclStep.builder().name("IMPLEND").pgm(ProgramRef.builder().name("&MBR").build()).build(),
+            JclStep.builder().name("EXPLEND").pgm(ProgramRef.builder().name("&MBR.B").build()).build()
+            ))
         .build();
     app.getProcLib().register("WITHSYM", withSym);
 
@@ -122,9 +124,27 @@ class ResolverTests {
         .numberOfRoutines(0)
         .build());
 
+    app.getLinkLib().register("DEFAULTB", ProgramSummary.builder()
+        .fileName("DEFAULTB.cbl")
+        .programName("DEFAULTB")
+        .kind(Program.Kind.COBOL)
+        .linesOfCode(5)
+        .numberOfConditionals(0)
+        .numberOfRoutines(0)
+        .build());
+
     app.getLinkLib().register("CUSTOM", ProgramSummary.builder()
         .fileName("CUSTOM.cbl")
         .programName("CUSTOM")
+        .kind(Program.Kind.COBOL)
+        .linesOfCode(9)
+        .numberOfConditionals(0)
+        .numberOfRoutines(0)
+        .build());
+
+    app.getLinkLib().register("CUSTOMB", ProgramSummary.builder()
+        .fileName("CUSTOMB.cbl")
+        .programName("CUSTOMB")
         .kind(Program.Kind.COBOL)
         .linesOfCode(9)
         .numberOfConditionals(0)
@@ -141,12 +161,19 @@ class ResolverTests {
 
     resolver.resolve(app.getJobs(), List.of(app.getProcLib()), List.of(app.getLinkLib()));
 
-    Procedure resolvedProc = (Procedure) app.getJobs().get(0).getSteps().get(0).getProc();
+    Job symparamJob = app.getJobs().get(0);
+    JclStep wdefaultStep = symparamJob.getSteps().get(0);
+    Procedure withSymProc01 = (Procedure) wdefaultStep.getProc();
 
-    JclStep doThing = resolvedProc.getSteps().get(0);
-    assertThat(doThing.getPgm()).isNotNull();
-    assertThat(doThing.getPgm()).isInstanceOf(ProgramSummary.class);
-    assertThat(((ProgramSummary) doThing.getPgm()).getProgramName()).isEqualTo("DEFAULT");
+    JclStep implendStep = withSymProc01.getSteps().get(0);
+    assertThat(implendStep.getPgm()).isNotNull();
+    assertThat(implendStep.getPgm()).isInstanceOf(ProgramSummary.class);
+    assertThat(((ProgramSummary) implendStep.getPgm()).getProgramName()).isEqualTo("DEFAULT");
+
+    JclStep explendStep = withSymProc01.getSteps().get(1);
+    assertThat(explendStep.getPgm()).isNotNull();
+    assertThat(explendStep.getPgm()).isInstanceOf(ProgramSummary.class);
+    assertThat(((ProgramSummary) explendStep.getPgm()).getProgramName()).isEqualTo("DEFAULTB");
   }
 
   @SuppressWarnings("null")
@@ -156,12 +183,19 @@ class ResolverTests {
 
     resolver.resolve(app.getJobs(), List.of(app.getProcLib()), List.of(app.getLinkLib()));
 
-    Procedure resolvedProc = (Procedure) app.getJobs().get(0).getSteps().get(1).getProc();
+    Job symparamJob = app.getJobs().get(0);
+    JclStep wcustomStep = symparamJob.getSteps().get(1);
+    Procedure withSymProc02 = (Procedure) wcustomStep.getProc();
 
-    JclStep stepWithCustomParams = resolvedProc.getSteps().get(1);
-    assertThat(stepWithCustomParams.getPgm()).isNotNull();
-    assertThat(stepWithCustomParams.getPgm()).isInstanceOf(ProgramSummary.class);
-    assertThat(((ProgramSummary) stepWithCustomParams.getPgm()).getProgramName()).isEqualTo("CUSTOM");
+    JclStep implendStep = withSymProc02.getSteps().get(0);
+    assertThat(implendStep.getPgm()).isNotNull();
+    assertThat(implendStep.getPgm()).isInstanceOf(ProgramSummary.class);
+    assertThat(((ProgramSummary) implendStep.getPgm()).getProgramName()).isEqualTo("CUSTOM");
+
+    JclStep explendStep = withSymProc02.getSteps().get(1);
+    assertThat(explendStep.getPgm()).isNotNull();
+    assertThat(explendStep.getPgm()).isInstanceOf(ProgramSummary.class);
+    assertThat(((ProgramSummary) explendStep.getPgm()).getProgramName()).isEqualTo("CUSTOMB");
   }
 
   private JclApp setupJobReferencingProcedureFromSecondaryLibrary() {
