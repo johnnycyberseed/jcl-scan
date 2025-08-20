@@ -49,6 +49,8 @@ public class JclScanIncludedProcsAndProgsTests {
         //ULUBATCH EXEC ULUBATCH
         //*
         //* Included programs
+        //FILEAID  EXEC PGM=FILEAID
+        //IDCAMS   EXEC PGM=IDCAMS
         //IEBGENER EXEC PGM=IEBGENER
         //*
         """.strip(), StandardCharsets.UTF_8);
@@ -62,6 +64,8 @@ public class JclScanIncludedProcsAndProgsTests {
     String expected = String.join("\n",
         "File Name,Program Name,Program Type,Lines of Code,Number of conditionals,Number of routines",
         "IEBGENER.cbl,IEBGENER,COBOL,156,0,0",
+        "IDCAMS.cbl,IDCAMS,COBOL,6,0,0",
+        "FILEAID.cbl,FILEAID,COBOL,6,0,0",
         "DUMMY.cbl,DUMMY,COBOL,6,0,0",
         "");
     assertThat(content).isEqualTo(expected);
@@ -81,6 +85,8 @@ public class JclScanIncludedProcsAndProgsTests {
         "JOB,UCC11RMS.DUMMY,(program),DUMMY,COBOL,6",
         "JOB,UDRBATCH.DUMMY,(program),DUMMY,COBOL,6",
         "JOB,ULUBATCH.DUMMY,(program),DUMMY,COBOL,6",
+        "JOB,FILEAID,(program),FILEAID,COBOL,6",
+        "JOB,IDCAMS,(program),IDCAMS,COBOL,6",
         "JOB,IEBGENER,(program),IEBGENER,COBOL,156",
         "");
     assertThat(content).isEqualTo(expected);

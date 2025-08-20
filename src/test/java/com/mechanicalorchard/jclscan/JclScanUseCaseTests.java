@@ -99,6 +99,8 @@ class JclScanUseCaseTests {
         "IMSPGM.cbl,IMSPGM,COBOL,5,0,0",
         "EZT1.ezt,EZT1,Easytrieve,5,0,0",
         "IEBGENER.cbl,IEBGENER,COBOL,156,0,0", // TODO: add column for "library" so that system programs can be differentiated from user programs
+        "IDCAMS.cbl,IDCAMS,COBOL,6,0,0",
+        "FILEAID.cbl,FILEAID,COBOL,6,0,0",
         "DUMMY.cbl,DUMMY,COBOL,6,0,0",
         "");
     assertThat(content).isEqualTo(expected);
