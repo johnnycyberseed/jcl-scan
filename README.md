@@ -34,9 +34,9 @@ where:
 This tool assumes a lot about the design of the JCL application.
 
 ### JCL
+- supplied listings are well-formed JCL scripts (i.e. no syntax errors).
 - assumes procedures are registered to members using the same name as the PROC symbolic name.
-- does not respect `IF` directives in JCL scripts
-- does not include the execution of user-authored programs when invoked indirectly by procedures (e.g. `DLIBATCH`).
+- ignores conditions on execution of steps (e.g. `IF` directives, `COND=` parameters).
 - recognizes only cataloged procedures (instream procedures not yet supported).
 - only supports simple symbolic parameters (e.g. `&MBR` and `&MBR.B`).
 

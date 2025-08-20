@@ -1,0 +1,3 @@
+//IMSCOC   PROC
+//DUMMY    EXEC PGM=DUMMY
+//*

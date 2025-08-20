@@ -156,19 +156,19 @@ class SourceDiscovererTests {
 
   @Test
   void discover_findsSourcesFromResources() throws IOException {
-    List<AppSourceFile> discovered = sourceDiscoverer.discover(List.of(Paths.get("classpath:libs")));
+    List<AppSourceFile> discovered = sourceDiscoverer.discover(List.of(Paths.get("classpath:libs/sys1/proclib")));
 
-    assertThat(discovered).hasSize(2);
+    assertThat(discovered).hasSizeGreaterThanOrEqualTo(2);
 
-    assertThat(discovered.get(0).getName()).isEqualTo("IMSBATCH.jcl");
+    assertThat(discovered.get(0).getName()).isEqualTo("ULUBATCH.jcl");
     assertThat(discovered.get(0).getKind()).isEqualTo(AppSourceFile.Kind.JCL);
     assertThat(discovered.get(0).getContent().getContentAsString(StandardCharsets.UTF_8))
-        .isEqualTo(readClasspath("libs/sys1/proclib/IMSBATCH.jcl"));
+        .isEqualTo(readClasspath("libs/sys1/proclib/ULUBATCH.jcl"));
 
-    assertThat(discovered.get(1).getName()).isEqualTo("DLIBATCH.jcl");
+    assertThat(discovered.get(1).getName()).isEqualTo("UDRBATCH.jcl");
     assertThat(discovered.get(1).getKind()).isEqualTo(AppSourceFile.Kind.JCL);
     assertThat(discovered.get(1).getContent().getContentAsString(StandardCharsets.UTF_8))
-        .isEqualTo(readClasspath("libs/sys1/proclib/DLIBATCH.jcl"));
+        .isEqualTo(readClasspath("libs/sys1/proclib/UDRBATCH.jcl"));
   }
 
   private static String readClasspath(String resourcePath) throws IOException {

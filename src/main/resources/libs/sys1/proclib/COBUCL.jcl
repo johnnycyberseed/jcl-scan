@@ -1,0 +1,3 @@
+//COBUCL   PROC
+//DUMMY    EXEC PGM=DUMMY
+//*

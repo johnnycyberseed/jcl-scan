@@ -98,6 +98,8 @@ class JclScanUseCaseTests {
         "PAYROLL1.cbl,PAYROLL1,COBOL,7,0,0",
         "IMSPGM.cbl,IMSPGM,COBOL,5,0,0",
         "EZT1.ezt,EZT1,Easytrieve,5,0,0",
+        "IEBGENER.cbl,IEBGENER,COBOL,156,0,0", // TODO: add column for "library" so that system programs can be differentiated from user programs
+        "DUMMY.cbl,DUMMY,COBOL,6,0,0",
         "");
     assertThat(content).isEqualTo(expected);
 

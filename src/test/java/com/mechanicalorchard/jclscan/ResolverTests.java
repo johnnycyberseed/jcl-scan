@@ -58,7 +58,7 @@ class ResolverTests {
 
   @SuppressWarnings("null")
   @Test
-  void resolve_resolvesProcRef_toProcedure() {
+  void resolve_resolvesProcedureRefs_toProcedures() {
     JclApp app = setupSimpleJclApp();
 
     resolver.resolve(app.getJobs(), List.of(app.getProcLib()), List.of(app.getLinkLib()));

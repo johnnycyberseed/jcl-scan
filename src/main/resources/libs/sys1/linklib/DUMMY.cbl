@@ -1,0 +1,6 @@
+       IDENTIFICATION DIVISION. 
+       PROGRAM-ID. DUMMY.
+       PROCEDURE DIVISION.
+           DISPLAY "DUMMY".
+           GOBACK.
+       END PROGRAM DUMMY.
