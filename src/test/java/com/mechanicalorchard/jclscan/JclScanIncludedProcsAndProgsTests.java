@@ -62,11 +62,11 @@ public class JclScanIncludedProcsAndProgsTests {
     assertThat(Files.exists(programReportFile)).isTrue();
     String content = Files.readString(programReportFile, StandardCharsets.UTF_8);
     String expected = String.join("\n",
-        "File Name,Program Name,Program Type,Lines of Code,Number of conditionals,Number of routines",
-        "IEBGENER.cbl,IEBGENER,COBOL,156,0,0",
-        "IDCAMS.cbl,IDCAMS,COBOL,6,0,0",
-        "FILEAID.cbl,FILEAID,COBOL,6,0,0",
-        "DUMMY.cbl,DUMMY,COBOL,6,0,0",
+        "Library Name,File Name,Program Name,Program Type,Lines of Code,Number of conditionals,Number of routines",
+        "SYS1.LINKLIB,IEBGENER.cbl,IEBGENER,COBOL,156,0,0",
+        "SYS1.LINKLIB,IDCAMS.cbl,IDCAMS,COBOL,6,0,0",
+        "SYS1.LINKLIB,FILEAID.cbl,FILEAID,COBOL,6,0,0",
+        "SYS1.LINKLIB,DUMMY.cbl,DUMMY,COBOL,6,0,0",
         "");
     assertThat(content).isEqualTo(expected);
 

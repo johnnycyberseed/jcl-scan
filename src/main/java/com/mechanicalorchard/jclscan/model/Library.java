@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.SequencedCollection;
 
 public class Library<T> {
+  private String name;
   private Map<String,T> lib = new LinkedHashMap<>();
 
   public void register(String name, T obj) {
@@ -22,5 +23,13 @@ public class Library<T> {
 
   public int size() {
     return lib.entrySet().size();
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
   }
 }

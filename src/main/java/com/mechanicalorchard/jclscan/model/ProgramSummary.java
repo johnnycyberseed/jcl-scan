@@ -13,6 +13,7 @@ import lombok.Data;
 @Data
 @Builder
 public final class ProgramSummary implements Program {
+    private String libraryName;
     private String fileName;
     private String programName;
     private Program.Kind kind;

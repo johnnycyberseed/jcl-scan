@@ -24,9 +24,10 @@ public class CsvReportWriter implements ReportWriter {
     @Override
     public void writeProgramReport(Path outputFile, ProgramReport report) throws IOException {
         try (BufferedWriter writer = Files.newBufferedWriter(outputFile, StandardCharsets.UTF_8)) {
-            writer.write("File Name,Program Name,Program Type,Lines of Code,Number of conditionals,Number of routines\n");
+            writer.write("Library Name,File Name,Program Name,Program Type,Lines of Code,Number of conditionals,Number of routines\n");
             for (ProgramSummary row : report.getRows()) {
                 writer.write(String.join(",",
+                        escape(row.getLibraryName()),
                         escape(row.getFileName()),
                         escape(baseName(row.getFileName())),
                         escape(row.getKind().getLabel()),

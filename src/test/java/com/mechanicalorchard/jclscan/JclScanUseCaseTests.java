@@ -94,14 +94,14 @@ class JclScanUseCaseTests {
     assertThat(Files.exists(programReportFile)).isTrue();
     String content = Files.readString(programReportFile, StandardCharsets.UTF_8);
     String expected = String.join("\n",
-        "File Name,Program Name,Program Type,Lines of Code,Number of conditionals,Number of routines",
-        "PAYROLL1.cbl,PAYROLL1,COBOL,7,0,0",
-        "IMSPGM.cbl,IMSPGM,COBOL,5,0,0",
-        "EZT1.ezt,EZT1,Easytrieve,5,0,0",
-        "IEBGENER.cbl,IEBGENER,COBOL,156,0,0", // TODO: add column for "library" so that system programs can be differentiated from user programs
-        "IDCAMS.cbl,IDCAMS,COBOL,6,0,0",
-        "FILEAID.cbl,FILEAID,COBOL,6,0,0",
-        "DUMMY.cbl,DUMMY,COBOL,6,0,0",
+        "Library Name,File Name,Program Name,Program Type,Lines of Code,Number of conditionals,Number of routines",
+        "USR1.LINKLIB,PAYROLL1.cbl,PAYROLL1,COBOL,7,0,0",
+        "USR1.LINKLIB,IMSPGM.cbl,IMSPGM,COBOL,5,0,0",
+        "USR1.LINKLIB,EZT1.ezt,EZT1,Easytrieve,5,0,0",
+        "SYS1.LINKLIB,IEBGENER.cbl,IEBGENER,COBOL,156,0,0", // TODO: add column for "library" so that system programs can be differentiated from user programs
+        "SYS1.LINKLIB,IDCAMS.cbl,IDCAMS,COBOL,6,0,0",
+        "SYS1.LINKLIB,FILEAID.cbl,FILEAID,COBOL,6,0,0",
+        "SYS1.LINKLIB,DUMMY.cbl,DUMMY,COBOL,6,0,0",
         "");
     assertThat(content).isEqualTo(expected);
 
@@ -125,6 +125,88 @@ class JclScanUseCaseTests {
         "Job,Step,Procedure,Program",
         "DAILY01,STEP01.UNKPROC,UNKPROC,(unknown)",
         "DAILY01,STEP01.UNKPGM,(program),UNKPGM",
+        "");
+    assertThat(content).isEqualTo(expected);
+  }
+
+  @Test
+  void scan_handlesMultipleSourceLibraries(@TempDir Path tempDir) throws IOException {
+    Path outputDirectory = tempDir.resolve("out");
+
+    Path srcsDir = tempDir.resolve("srcs");
+
+    Path src1 = srcsDir.resolve("alpha");
+    Files.createDirectories(src1);
+    Path src2 = srcsDir.resolve("beta");
+    Files.createDirectories(src2);
+
+
+    Path job1 = src1.resolve("JOB01.jcl");
+    Files.writeString(job1, """
+        //JOB01    JOB
+        //STEP01   EXEC PGM=PGM01
+        """.strip(), StandardCharsets.UTF_8);
+
+    Path pgm1 = src1.resolve("PGM01.cbl");
+    Files.writeString(pgm1, """
+        IDENTIFICATION DIVISION.
+        PROGRAM-ID. PGM01.
+        PROCEDURE DIVISION.
+          DISPLAY 'PGM01'.
+        STOP RUN.
+        """.strip(), StandardCharsets.UTF_8);
+
+    Path job2 = src2.resolve("JOB02.jcl");
+    Files.writeString(job2, """
+        //JOB02    JOB
+        //STEP01   EXEC PGM=PGM02
+        """.strip(), StandardCharsets.UTF_8);
+
+    Path pgm2 = src2.resolve("PGM02.cbl");
+    Files.writeString(pgm2, """
+        IDENTIFICATION DIVISION.
+        PROGRAM-ID. PGM02.
+        PROCEDURE DIVISION.
+          DISPLAY 'PGM02'.
+        STOP RUN.
+        """.strip(), StandardCharsets.UTF_8);
+
+
+    // A library is created for each source directory
+    appScanner.scan(outputDirectory, List.of(src1, src2));
+
+    Path programReportFile = outputDirectory.resolve("program-report.csv");
+
+    assertThat(Files.exists(programReportFile)).isTrue();
+    String content = Files.readString(programReportFile, StandardCharsets.UTF_8);
+    String expected = String.join("\n",
+        "Library Name,File Name,Program Name,Program Type,Lines of Code,Number of conditionals,Number of routines",
+        "USR1.LINKLIB,PGM01.cbl,PGM01,COBOL,5,0,0",
+        "USR2.LINKLIB,PGM02.cbl,PGM02,COBOL,5,0,0",
+        "SYS1.LINKLIB,IEBGENER.cbl,IEBGENER,COBOL,156,0,0",
+        "SYS1.LINKLIB,IDCAMS.cbl,IDCAMS,COBOL,6,0,0",
+        "SYS1.LINKLIB,FILEAID.cbl,FILEAID,COBOL,6,0,0",
+        "SYS1.LINKLIB,DUMMY.cbl,DUMMY,COBOL,6,0,0",
+        "");
+    assertThat(content).isEqualTo(expected);
+
+    Path executionReportFile = outputDirectory.resolve("execution-report.csv");
+
+    assertThat(Files.exists(executionReportFile)).isTrue();
+    content = Files.readString(executionReportFile, StandardCharsets.UTF_8);
+    expected = String.join("\n",
+        "Job,Step,Procedure,Program,Program Type,Lines of Code",
+        "JOB01,STEP01,(program),PGM01,COBOL,5",
+        "JOB02,STEP01,(program),PGM02,COBOL,5",
+        "");
+    assertThat(content).isEqualTo(expected);
+
+    Path unresolvedReportFile = outputDirectory.resolve("unresolved-report.csv");
+
+    assertThat(Files.exists(unresolvedReportFile)).isTrue();
+    content = Files.readString(unresolvedReportFile, StandardCharsets.UTF_8);
+    expected = String.join("\n",
+        "Job,Step,Procedure,Program",
         "");
     assertThat(content).isEqualTo(expected);
   }
