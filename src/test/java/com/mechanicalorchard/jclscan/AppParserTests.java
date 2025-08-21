@@ -56,12 +56,12 @@ public class AppParserTests {
 
   @BeforeEach
   void buildSampleApp() {
-    appUnderTest = appParser.parse(sampleAppSourceFiles());
+    appUnderTest = appParser.parse(sampleAppSourceFiles(), "TEST");
   }
 
   @Test
   void shouldParseEmptyApp() {
-    JclApp app = appParser.parse(List.of());
+    JclApp app = appParser.parse(List.of(), "EMPTY");
     assertThat(app.getJobs()).hasSize(0);
     assertThat(app.getProcLib().size()).isEqualTo(0);
     assertThat(app.getLinkLib().size()).isEqualTo(0);

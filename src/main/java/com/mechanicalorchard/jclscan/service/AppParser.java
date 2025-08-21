@@ -27,9 +27,13 @@ public class AppParser {
   @Autowired
   private EasytrieveAnalyzer easytrieveAnalyzer;
 
-  public JclApp parse(List<AppSourceFile> appSourceFiles) {
+  public JclApp parse(List<AppSourceFile> appSourceFiles, String libraryPrefix) {
     log.info("Parsing {} source files", appSourceFiles.size());
     JclApp app = new JclApp();
+    
+    // Set library names using the provided prefix
+    app.getLinkLib().setName(libraryPrefix + ".LINKLIB");
+    app.getProcLib().setName(libraryPrefix + ".PROCLIB");
     
     for (AppSourceFile appSourceFile : appSourceFiles) {
       try {
@@ -56,13 +60,13 @@ public class AppParser {
             }
             break;
           case COBOL:
-            ProgramSummary cobolSummary = cobolAnalyzer.analyze(appSourceFile.getName(), source);
+            ProgramSummary cobolSummary = cobolAnalyzer.analyze(appSourceFile.getName(), source, app.getLinkLib().getName());
             libMemberName = baseName(appSourceFile.getName());
             app.getLinkLib().register(libMemberName, cobolSummary);
             log.trace("Registered COBOL program \"{}\" to \"{}\" in LINK library", cobolSummary.getName(), libMemberName);
             break;
           case EASYTRIEVE:
-            ProgramSummary easytrieveSummary = easytrieveAnalyzer.analyze(appSourceFile.getName(), source);
+            ProgramSummary easytrieveSummary = easytrieveAnalyzer.analyze(appSourceFile.getName(), source, app.getLinkLib().getName());
             libMemberName = baseName(appSourceFile.getName());
             app.getLinkLib().register(libMemberName, easytrieveSummary);
             log.trace("Registered Easytrieve program \"{}\" to \"{}\" in LINK library", easytrieveSummary.getName(), libMemberName);

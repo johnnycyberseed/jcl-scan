@@ -37,10 +37,11 @@ class EasytrieveAnalyzerTests {
     """;
 
     // When
-    ProgramSummary easytrieveFile = easytrieveAnalyzer.analyze("HELLO.ezt", easytrieveContent);
+    ProgramSummary easytrieveFile = easytrieveAnalyzer.analyze("HELLO.ezt", easytrieveContent, "TEST.LINKLIB");
 
     // Then
     assertThat(easytrieveFile).isEqualTo(ProgramSummary.builder()
+        .libraryName("TEST.LINKLIB")
         .programName("HELLO-WORLD")
         .fileName("HELLO.ezt")
         .kind(Program.Kind.EASYTRIEVE)

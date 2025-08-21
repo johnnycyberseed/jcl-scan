@@ -13,11 +13,12 @@ public class CobolAnalyzer {
 
   private static final Pattern PROGRAM_ID_PATTERN = Pattern.compile("PROGRAM-ID\\.\\s+([A-Z0-9\\-]+)");
 
-  public ProgramSummary analyze(String fileName, String cobolContent) {
+  public ProgramSummary analyze(String fileName, String cobolContent, String libraryName) {
     String programName = extractProgramId(cobolContent);
     int linesOfCode = countLinesOfCode(cobolContent);
     
     return ProgramSummary.builder()
+        .libraryName(libraryName)
         .fileName(fileName)
         .programName(programName)
         .kind(Program.Kind.COBOL)

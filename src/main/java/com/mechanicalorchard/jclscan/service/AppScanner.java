@@ -54,12 +54,9 @@ public class AppScanner {
     for (int i = 0; i < inputPaths.size(); i++) {
       Path inputPath = inputPaths.get(i);
       List<AppSourceFile> sources = sourceDiscoverer.discover(List.of(inputPath));
-      JclApp app = appParser.parse(sources);
       
-      // Name the libraries for this user root
-      String libraryName = "USR" + (i + 1) + ".LINKLIB";
-      app.getLinkLib().setName(libraryName);
-      app.getProcLib().setName("USR" + (i + 1) + ".PROCLIB");
+      String libraryPrefix = "USR" + (i + 1);
+      JclApp app = appParser.parse(sources, libraryPrefix);
       
       userApps.add(app);
     }
@@ -80,9 +77,7 @@ public class AppScanner {
 
     // Always load system libraries for complete analysis
     List<AppSourceFile> systemSources = sourceDiscoverer.discover(List.of(Paths.get("classpath:libs")));
-    JclApp systemApp = appParser.parse(systemSources);
-    systemApp.getLinkLib().setName("SYS1.LINKLIB");
-    systemApp.getProcLib().setName("SYS1.PROCLIB");
+    JclApp systemApp = appParser.parse(systemSources, "SYS1");
     
     procLibs.add(systemApp.getProcLib());
     linkLibs.add(systemApp.getLinkLib());
@@ -90,22 +85,12 @@ public class AppScanner {
     // Resolve jobs using libraries with precedence
     resolver.resolve(allJobs, procLibs, linkLibs);
 
-    // Build program report by collecting all programs from all libraries and setting their library names
+    // Build program report by collecting all programs from all libraries
     List<ProgramSummary> summaries = new ArrayList<>();
     for (com.mechanicalorchard.jclscan.model.Library<Program> linkLib : linkLibs) {
       for (Program program : linkLib.registered()) {
         if (program instanceof ProgramSummary summary) {
-          // Create a new ProgramSummary with the library name set
-          ProgramSummary summaryWithLibrary = ProgramSummary.builder()
-              .libraryName(linkLib.getName())
-              .fileName(summary.getFileName())
-              .programName(summary.getProgramName())
-              .kind(summary.getKind())
-              .linesOfCode(summary.getLinesOfCode())
-              .numberOfConditionals(summary.getNumberOfConditionals())
-              .numberOfRoutines(summary.getNumberOfRoutines())
-              .build();
-          summaries.add(summaryWithLibrary);
+          summaries.add(summary);
         }
       }
     }

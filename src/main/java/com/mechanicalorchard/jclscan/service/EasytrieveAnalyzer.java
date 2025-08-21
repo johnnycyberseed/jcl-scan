@@ -13,11 +13,12 @@ public class EasytrieveAnalyzer {
 
   private static final Pattern REPORT_PATTERN = Pattern.compile("REPORT\\s+([A-Z0-9\\-]+)");
 
-  public ProgramSummary analyze(String easytrieveName, String easytrieveContent) {
+  public ProgramSummary analyze(String easytrieveName, String easytrieveContent, String libraryName) {
     String reportName = extractReportName(easytrieveContent);
     int linesOfCode = countLinesOfCode(easytrieveContent);
     
     return ProgramSummary.builder()
+        .libraryName(libraryName)
         .fileName(easytrieveName)
         .programName(reportName)
         .kind(Program.Kind.EASYTRIEVE)

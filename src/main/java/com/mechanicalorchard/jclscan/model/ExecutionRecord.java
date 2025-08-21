@@ -10,6 +10,7 @@ public class ExecutionRecord {
   private String stepName;
   private String procedureName;
   private String programName;
+  private String libraryName;
   private Program.Kind programKind;
   private int linesOfCode;
 }

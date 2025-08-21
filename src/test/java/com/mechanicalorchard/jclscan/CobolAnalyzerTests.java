@@ -32,10 +32,11 @@ class CobolAnalyzerTests {
     """;
 
     // When
-    ProgramSummary cobolFile = cobolAnalyzer.analyze("HELLO.cbl", cobolContent);
+    ProgramSummary cobolFile = cobolAnalyzer.analyze("HELLO.cbl", cobolContent, "TEST.LINKLIB");
 
     // Then
     assertThat(cobolFile).isEqualTo(ProgramSummary.builder()
+        .libraryName("TEST.LINKLIB")
         .fileName("HELLO.cbl")
         .programName("HELLO-WORLD")
         .kind(Program.Kind.COBOL)

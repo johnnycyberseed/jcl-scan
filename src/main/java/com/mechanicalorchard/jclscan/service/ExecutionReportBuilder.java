@@ -42,6 +42,7 @@ public class ExecutionReportBuilder {
             .stepName(stepPath)
             .procedureName("(program)")
             .programName(baseName(summary.getFileName()))
+            .libraryName(summary.getLibraryName())
             .programKind(summary.getKind())
             .linesOfCode(summary.getLinesOfCode())
             .build());
