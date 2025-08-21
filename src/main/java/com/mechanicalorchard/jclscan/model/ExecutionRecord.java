@@ -8,7 +8,6 @@ import lombok.Data;
 public class ExecutionRecord {
   private String jobName;
   private String stepName;
-  private String procedureName;
   private String programName;
   private String libraryName;
   private Program.Kind programKind;

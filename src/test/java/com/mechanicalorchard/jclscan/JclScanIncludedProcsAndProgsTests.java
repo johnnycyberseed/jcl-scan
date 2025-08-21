@@ -75,19 +75,19 @@ public class JclScanIncludedProcsAndProgsTests {
     assertThat(Files.exists(executionReportFile)).isTrue();
     content = Files.readString(executionReportFile, StandardCharsets.UTF_8);
     expected = String.join("\n",
-        "Job,Step,Procedure,Program,Library Name,Program Type,Lines of Code",
-        "JOB,COBUCL.DUMMY,(program),DUMMY,SYS1.LINKLIB,COBOL,6",
-        "JOB,DLIBATCH.DLIBATCH,(program),DUMMY,SYS1.LINKLIB,COBOL,6",
-        "JOB,FTPBATCH.DUMMY,(program),DUMMY,SYS1.LINKLIB,COBOL,6",
-        "JOB,IMSBATCH.IMSBATCH,(program),DUMMY,SYS1.LINKLIB,COBOL,6",
-        "JOB,IMSCOC.DUMMY,(program),DUMMY,SYS1.LINKLIB,COBOL,6",
-        "JOB,IMSCON.DUMMY,(program),DUMMY,SYS1.LINKLIB,COBOL,6",
-        "JOB,UCC11RMS.DUMMY,(program),DUMMY,SYS1.LINKLIB,COBOL,6",
-        "JOB,UDRBATCH.DUMMY,(program),DUMMY,SYS1.LINKLIB,COBOL,6",
-        "JOB,ULUBATCH.DUMMY,(program),DUMMY,SYS1.LINKLIB,COBOL,6",
-        "JOB,FILEAID,(program),FILEAID,SYS1.LINKLIB,COBOL,6",
-        "JOB,IDCAMS,(program),IDCAMS,SYS1.LINKLIB,COBOL,6",
-        "JOB,IEBGENER,(program),IEBGENER,SYS1.LINKLIB,COBOL,156",
+        "Job,Step,Program,Library Name,Program Type,Lines of Code",
+        "JOB,COBUCL.DUMMY,DUMMY,SYS1.LINKLIB,COBOL,6",
+        "JOB,DLIBATCH.DLIBATCH,DUMMY,SYS1.LINKLIB,COBOL,6",
+        "JOB,FTPBATCH.DUMMY,DUMMY,SYS1.LINKLIB,COBOL,6",
+        "JOB,IMSBATCH.IMSBATCH,DUMMY,SYS1.LINKLIB,COBOL,6",
+        "JOB,IMSCOC.DUMMY,DUMMY,SYS1.LINKLIB,COBOL,6",
+        "JOB,IMSCON.DUMMY,DUMMY,SYS1.LINKLIB,COBOL,6",
+        "JOB,UCC11RMS.DUMMY,DUMMY,SYS1.LINKLIB,COBOL,6",
+        "JOB,UDRBATCH.DUMMY,DUMMY,SYS1.LINKLIB,COBOL,6",
+        "JOB,ULUBATCH.DUMMY,DUMMY,SYS1.LINKLIB,COBOL,6",
+        "JOB,FILEAID,FILEAID,SYS1.LINKLIB,COBOL,6",
+        "JOB,IDCAMS,IDCAMS,SYS1.LINKLIB,COBOL,6",
+        "JOB,IEBGENER,IEBGENER,SYS1.LINKLIB,COBOL,156",
         "");
     assertThat(content).isEqualTo(expected);
 

@@ -110,10 +110,10 @@ class JclScanUseCaseTests {
     assertThat(Files.exists(executionReportFile)).isTrue();
     content = Files.readString(executionReportFile, StandardCharsets.UTF_8);
     expected = String.join("\n",
-        "Job,Step,Procedure,Program,Library Name,Program Type,Lines of Code",
-        "DAILY01,STEP01.QUERY.DLIBATCH,(program),IMSPGM,USR1.LINKLIB,COBOL,5",
-        "DAILY01,STEP01.DOTHING,(program),PAYROLL1,USR1.LINKLIB,COBOL,7",
-        "DAILY01,STEP01.RPTTHING,(program),EZT1,USR1.LINKLIB,EASYTRIEVE,5",
+        "Job,Step,Program,Library Name,Program Type,Lines of Code",
+        "DAILY01,STEP01.QUERY.DLIBATCH,IMSPGM,USR1.LINKLIB,COBOL,5",
+        "DAILY01,STEP01.DOTHING,PAYROLL1,USR1.LINKLIB,COBOL,7",
+        "DAILY01,STEP01.RPTTHING,EZT1,USR1.LINKLIB,EASYTRIEVE,5",
         "");
     assertThat(content).isEqualTo(expected);
 
@@ -195,9 +195,9 @@ class JclScanUseCaseTests {
     assertThat(Files.exists(executionReportFile)).isTrue();
     content = Files.readString(executionReportFile, StandardCharsets.UTF_8);
     expected = String.join("\n",
-        "Job,Step,Procedure,Program,Library Name,Program Type,Lines of Code",
-        "JOB01,STEP01,(program),PGM01,USR1.LINKLIB,COBOL,5",
-        "JOB02,STEP01,(program),PGM02,USR2.LINKLIB,COBOL,5",
+        "Job,Step,Program,Library Name,Program Type,Lines of Code",
+        "JOB01,STEP01,PGM01,USR1.LINKLIB,COBOL,5",
+        "JOB02,STEP01,PGM02,USR2.LINKLIB,COBOL,5",
         "");
     assertThat(content).isEqualTo(expected);
 

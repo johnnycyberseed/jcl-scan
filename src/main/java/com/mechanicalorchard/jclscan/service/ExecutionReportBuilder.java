@@ -40,7 +40,6 @@ public class ExecutionReportBuilder {
         out.add(ExecutionRecord.builder()
             .jobName(jobName)
             .stepName(stepPath)
-            .procedureName("(program)")
             .programName(baseName(summary.getFileName()))
             .libraryName(summary.getLibraryName())
             .programKind(summary.getKind())
