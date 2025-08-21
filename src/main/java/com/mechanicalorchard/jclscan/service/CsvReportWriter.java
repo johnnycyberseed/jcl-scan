@@ -43,13 +43,13 @@ public class CsvReportWriter implements ReportWriter {
     @Override
     public void writeExecutionReport(Path outputFile, ExecutionReport report) throws IOException {
         try (BufferedWriter writer = Files.newBufferedWriter(outputFile, StandardCharsets.UTF_8)) {
-            writer.write("Job,Step,Program,Library Name,Program Type,Lines of Code\n");
+            writer.write("Job,Step,Library,Program,Program Type,Lines of Code\n");
             for (ExecutionRecord row : report.getExecutions()) {
                 writer.write(String.join(",",
                         escape(row.getJobName()),
                         escape(row.getStepName()),
-                        escape(row.getProgramName()),
                         escape(row.getLibraryName()),
+                        escape(row.getProgramName()),
                         escape(row.getProgramKind().name()),
                         Integer.toString(row.getLinesOfCode())));
                 writer.write("\n");
