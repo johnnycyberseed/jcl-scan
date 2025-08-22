@@ -52,6 +52,8 @@ public class JclScanIncludedProcsAndProgsTests {
         //FILEAID  EXEC PGM=FILEAID
         //IDCAMS   EXEC PGM=IDCAMS
         //IEBGENER EXEC PGM=IEBGENER
+        //ICEMAN   EXEC PGM=ICEMAN
+        //IEFBR14  EXEC PGM=IEFBR14
         //*
         """.strip(), StandardCharsets.UTF_8);
 
@@ -63,8 +65,10 @@ public class JclScanIncludedProcsAndProgsTests {
     String content = Files.readString(programReportFile, StandardCharsets.UTF_8);
     String expected = String.join("\n",
         "Library Name,File Name,Program Name,Program Type,Lines of Code,Number of conditionals,Number of routines",
+        "SYS1.LINKLIB,IEFBR14.cbl,IEFBR14,COBOL,6,0,0",
         "SYS1.LINKLIB,IEBGENER.cbl,IEBGENER,COBOL,156,0,0",
         "SYS1.LINKLIB,IDCAMS.cbl,IDCAMS,COBOL,6,0,0",
+        "SYS1.LINKLIB,ICEMAN.cbl,ICEMAN,COBOL,6,0,0",
         "SYS1.LINKLIB,FILEAID.cbl,FILEAID,COBOL,6,0,0",
         "SYS1.LINKLIB,DUMMY.cbl,DUMMY,COBOL,6,0,0",
         "");
@@ -88,6 +92,8 @@ public class JclScanIncludedProcsAndProgsTests {
         "JOB,FILEAID,SYS1.LINKLIB,FILEAID,COBOL,6",
         "JOB,IDCAMS,SYS1.LINKLIB,IDCAMS,COBOL,6",
         "JOB,IEBGENER,SYS1.LINKLIB,IEBGENER,COBOL,156",
+        "JOB,ICEMAN,SYS1.LINKLIB,ICEMAN,COBOL,6",
+        "JOB,IEFBR14,SYS1.LINKLIB,IEFBR14,COBOL,6",
         "");
     assertThat(content).isEqualTo(expected);
 

@@ -98,8 +98,10 @@ class JclScanUseCaseTests {
         "USR1.LINKLIB,PAYROLL1.cbl,PAYROLL1,COBOL,7,0,0",
         "USR1.LINKLIB,IMSPGM.cbl,IMSPGM,COBOL,5,0,0",
         "USR1.LINKLIB,EZT1.ezt,EZT1,Easytrieve,5,0,0",
+        "SYS1.LINKLIB,IEFBR14.cbl,IEFBR14,COBOL,6,0,0",
         "SYS1.LINKLIB,IEBGENER.cbl,IEBGENER,COBOL,156,0,0", // TODO: add column for "library" so that system programs can be differentiated from user programs
         "SYS1.LINKLIB,IDCAMS.cbl,IDCAMS,COBOL,6,0,0",
+        "SYS1.LINKLIB,ICEMAN.cbl,ICEMAN,COBOL,6,0,0",
         "SYS1.LINKLIB,FILEAID.cbl,FILEAID,COBOL,6,0,0",
         "SYS1.LINKLIB,DUMMY.cbl,DUMMY,COBOL,6,0,0",
         "");
@@ -183,8 +185,10 @@ class JclScanUseCaseTests {
         "Library Name,File Name,Program Name,Program Type,Lines of Code,Number of conditionals,Number of routines",
         "USR1.LINKLIB,PGM01.cbl,PGM01,COBOL,5,0,0",
         "USR2.LINKLIB,PGM02.cbl,PGM02,COBOL,5,0,0",
+        "SYS1.LINKLIB,IEFBR14.cbl,IEFBR14,COBOL,6,0,0",
         "SYS1.LINKLIB,IEBGENER.cbl,IEBGENER,COBOL,156,0,0",
         "SYS1.LINKLIB,IDCAMS.cbl,IDCAMS,COBOL,6,0,0",
+        "SYS1.LINKLIB,ICEMAN.cbl,ICEMAN,COBOL,6,0,0",
         "SYS1.LINKLIB,FILEAID.cbl,FILEAID,COBOL,6,0,0",
         "SYS1.LINKLIB,DUMMY.cbl,DUMMY,COBOL,6,0,0",
         "");
